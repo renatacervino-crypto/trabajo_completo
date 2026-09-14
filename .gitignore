@@ -1,0 +1,6 @@
+node_modules/
+dist/
+tienda-frontend/node_modules/
+tienda-frontend/dist/
+.DS_Store
+*.log
