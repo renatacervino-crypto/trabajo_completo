@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
 import { getProductos } from '../services/api';
+import { useCart } from '../context/CartContext';
 
-export default function CatalogPage() {
+export default function CatalogPage({ onSelectProduct }) {
   const [productos, setProductos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { addToCart } = useCart();
+  const [notification, setNotification] = useState('');
 
   const cargarProductos = () => {
     setIsLoading(true);
@@ -29,46 +32,25 @@ export default function CatalogPage() {
     cargarProductos();
   }, []);
 
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    setNotification(`¡"${product.nombre}" agregado a la bolsa!`);
+    setTimeout(() => setNotification(''), 3000);
+  };
+
   const filteredProducts = productos.filter((prod) =>
     prod.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 flex flex-col">
-      {/* Top Banner */}
-      <div className="bg-stone-200 text-stone-700 py-1.5 px-4 text-center text-xs tracking-widest uppercase font-medium">
-        Envío de cortesía y 2 muestras exclusivas con cada pedido
-      </div>
-
-      {/* Header */}
-      <header className="bg-white border-b border-stone-200 sticky top-0 z-30 shadow-xs">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-serif tracking-widest font-semibold text-stone-900">
-              L'ÉLIXIR
-            </h1>
-            <p className="text-[9px] tracking-[0.25em] text-amber-700 uppercase -mt-0.5">
-              Haute Parfumerie · Catálogo Oficial
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold tracking-wider text-stone-600 uppercase hidden sm:inline">
-              Backend DSI2: /api/productos
-            </span>
-            <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium ${
-                error
-                  ? 'bg-red-100 text-red-800'
-                  : isLoading
-                  ? 'bg-amber-100 text-amber-800'
-                  : 'bg-emerald-100 text-emerald-800'
-              }`}
-            >
-              {error ? '● Error de Conexión' : isLoading ? '● Cargando...' : '● En Línea'}
-            </span>
-          </div>
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed bottom-6 right-6 z-50 bg-stone-900 text-white text-xs px-4 py-3 rounded shadow-lg flex items-center gap-2 border border-amber-700 animate-bounce">
+          <span>🛍️</span>
+          <span>{notification}</span>
         </div>
-      </header>
+      )}
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 flex-1 w-full">
@@ -81,7 +63,7 @@ export default function CatalogPage() {
             Catálogo de Productos
           </h2>
           <p className="text-sm text-stone-600 mt-2 font-light">
-            Catálogo sincronizado en tiempo real con la base de datos PostgreSQL de DSI2.
+            Haz clic en cualquier fragancia para ver su ficha técnica detallada o agrégala directamente a tu bolsa.
           </p>
         </div>
 
@@ -160,6 +142,14 @@ export default function CatalogPage() {
                   (precioFinal > 0 ? Math.round(precioFinal / cuotasCantidad) : 0);
                 const garantiaMeses = prod.garantia_meses ?? 12;
 
+                const fullProductData = {
+                  ...prod,
+                  precio_final: precioFinal,
+                  cuotas_cantidad: cuotasCantidad,
+                  cuotas_valor: cuotasValor,
+                  garantia_meses: garantiaMeses,
+                };
+
                 return (
                   <ProductCard
                     key={prod.id || prod.nombre}
@@ -173,6 +163,8 @@ export default function CatalogPage() {
                       prod.image ||
                       'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80'
                     }
+                    onSelect={() => onSelectProduct && onSelectProduct(fullProductData)}
+                    onAddToCart={() => handleAddToCart(fullProductData)}
                   />
                 );
               })}
@@ -186,11 +178,6 @@ export default function CatalogPage() {
           </>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-stone-200 py-6 text-center text-xs text-stone-500">
-        L'Élixir Haute Parfumerie · Proyecto Frontend DSI2
-      </footer>
     </div>
   );
 }

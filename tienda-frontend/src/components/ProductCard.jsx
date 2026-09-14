@@ -5,6 +5,8 @@ export default function ProductCard({
   cuotas_valor = 30833,
   garantia_meses = 12,
   imagen = "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80",
+  onSelect,
+  onAddToCart,
 }) {
   const formatMoney = (val) => {
     if (typeof val === 'number') {
@@ -13,19 +15,34 @@ export default function ProductCard({
     return val || '$0';
   };
 
+  const productData = {
+    nombre,
+    precio_final,
+    cuotas_cantidad,
+    cuotas_valor,
+    garantia_meses,
+    imagen,
+  };
+
   return (
-    <div className="rounded-lg shadow p-4 bg-white border border-stone-200 flex flex-col justify-between hover:shadow-lg transition-all duration-300">
-      <div className="overflow-hidden rounded-md bg-stone-50 aspect-square mb-4 flex items-center justify-center">
+    <div className="rounded-lg shadow p-4 bg-white border border-stone-200 flex flex-col justify-between hover:shadow-lg transition-all duration-300 group">
+      <div
+        onClick={() => onSelect && onSelect(productData)}
+        className="cursor-pointer overflow-hidden rounded-md bg-stone-50 aspect-square mb-4 flex items-center justify-center"
+      >
         <img
           src={imagen}
           alt={nombre}
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
       </div>
 
       <div className="flex-1 flex flex-col justify-between">
-        <div>
-          <h3 className="text-lg font-serif font-medium text-stone-900 line-clamp-1">
+        <div
+          onClick={() => onSelect && onSelect(productData)}
+          className="cursor-pointer"
+        >
+          <h3 className="text-lg font-serif font-medium text-stone-900 line-clamp-1 group-hover:text-amber-800 transition-colors">
             {nombre}
           </h3>
 
@@ -48,7 +65,15 @@ export default function ProductCard({
         </div>
       </div>
 
-      <button className="mt-4 w-full bg-stone-900 hover:bg-amber-800 text-stone-100 text-xs font-semibold tracking-wider uppercase py-2.5 px-4 rounded transition-colors duration-200 cursor-pointer">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onAddToCart) {
+            onAddToCart(productData);
+          }
+        }}
+        className="mt-4 w-full bg-stone-900 hover:bg-amber-800 text-stone-100 text-xs font-semibold tracking-wider uppercase py-2.5 px-4 rounded transition-colors duration-200 cursor-pointer"
+      >
         Agregar al carrito
       </button>
     </div>

@@ -1,26 +1,44 @@
 # L'Élixir · Haute Parfumerie Paris
 ### Plataforma E-Commerce de Perfumes de Autor y Alta Gama (DSI2)
 
-Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio electrónico editorial inspirada en las históricas casas de fragancias parisinas. Este repositorio contiene tanto el **diseño y prototipo editorial de Google Stitch** como la implementación de la **aplicación frontend en React + Vite con TailwindCSS (`tienda-frontend`)**, conectada con el backend de FastAPI y base de datos PostgreSQL en DSI2.
+Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio electrónico editorial inspirada en las históricas casas de fragancias parisinas. Este repositorio contiene tanto el **diseño y prototipo editorial generado en Google Stitch / AI Studio** como la implementación de la **aplicación frontend en React + Vite con TailwindCSS (`tienda-frontend`)**, conectada con el backend de FastAPI y base de datos en DSI2.
 
 ---
 
-## ✅ Checklist de Entrega — Clase 3: Carga y Error
+## 🌟 Prototipo Navegable Completo (4 Pantallas Interconectadas)
 
-- [x] **`api.js` lanza error si la respuesta no es ok:** Verifica `!respuesta.ok` y arroja `throw new Error('Error al consultar el backend')`.
-- [x] **Estado `isLoading` mostrando un mensaje de carga:** Controlado con `useState(true)`, activado antes del fetch y desactivado en `.finally()`.
-- [x] **Estado `error` mostrando un mensaje si algo falla:** Capturado con `.catch()`, almacena el mensaje de error y lo muestra en pantalla evitando pantallas en blanco.
-- [x] **Mensaje para catálogo vacío:** Muestra un aviso informativo cuando la base de datos no contiene productos disponibles.
-- [x] **Probado con el backend apagado:** Se muestra un contenedor con el mensaje de error legible y botón de reintento.
-- [x] **El catálogo se recupera al volver a prender el backend:** Al restablecer el servicio y reintentar, se cargan los productos reales automáticamente.
+El proyecto incluye un flujo de navegación continuo e interactivo que enlaza las 4 pantallas solicitadas en la consigna:
+
+1. **Catálogo de Productos:** Consulta en vivo a la base de datos a través de `/api/productos`, con buscador en tiempo real, filtros y selección directa de artículos.
+2. **Ficha de Producto:** Vista detallada de la fragancia seleccionada basada en el modelo Pydantic (`nombre`, `precio_final`, `cuotas_cantidad`, `cuotas_valor`, `garantia_meses`, `en_stock`), selector interactivo de volumen (50ml/100ml/250ml) y pirámide olfativa.
+3. **Bolsa / Carrito de Compras:** Gestión reactiva del estado del pedido con suma, resta y eliminación de ítems, cálculo automático de cuotas sin interés y muestras de cortesía artesanales.
+4. **Mi Cuenta:** Perfil de usuario con historial de compras, dirección de entrega y aviso de cumplimiento de la **Ley 25.326 de Protección de Datos Personales**.
 
 ---
 
-## 💡 Pregunta Conceptual (Para Pensar)
+## ✅ Checklist de Entrega — Prototipo AI Studio
 
-> **¿Por qué te parece que no tuviste que cambiar nada en `ProductCard` ni en la lógica del componente, a pesar de que el backend cambió por completo de motor de datos?**
->
-> **Respuesta:** Porque se respetó el contrato de la interfaz (API contract). Gracias a la arquitectura por capas y la centralización de llamadas en `services/api.js`, el frontend desacopla por completo la interfaz de usuario (`ProductCard`) de la tecnología de persistencia del backend (PostgreSQL). `ProductCard` solo requiere recibir sus props (`nombre`, `precio_final`, etc.) sin importar si los datos provienen de una lista en memoria o de una base de datos relacional.
+- [x] **Prototipo con 4 pantallas:** Catálogo, Ficha de Producto, Carrito y Mi Cuenta.
+- [x] **Las pantallas están conectadas por navegación:** Accesibles desde la barra superior y desde acciones contextuales (clic en producto -> ficha -> agregar -> bolsa).
+- [x] **Al menos 2 iteraciones de ajuste:** Detalladas en [`tienda-frontend/PROTOTIPO_AI_STUDIO.md`](./tienda-frontend/PROTOTIPO_AI_STUDIO.md).
+- [x] **Link del prototipo guardado:** Disponible en este repositorio en GitHub: [https://github.com/renatacervino-crypto/trabajo_completo](https://github.com/renatacervino-crypto/trabajo_completo).
+- [x] **Captura de cada una de las 4 pantallas:** Disponibles en los directorios del proyecto y en el portal interactivo [`index.html`](./index.html).
+- [x] **Respuestas de la revisión crítica:** Documentadas a continuación y en el informe adjunto.
+
+---
+
+## 🧠 Respuestas de la Revisión Crítica
+
+1. **¿Qué pantalla del prototipo se parece más a lo que realmente van a construir?**
+   > **El Catálogo y la Ficha de Producto.** Ambas vistas consumen directamente los modelos Pydantic definidos en el backend de FastAPI (`GET /productos` y `GET /productos/{id}`). Los atributos mostrados (`nombre`, `precio_final`, `cuotas_cantidad`, `cuotas_valor`, `garantia_meses`) responden al contrato de datos de producción.
+
+2. **¿Qué parte del prototipo NO tiene sentido para su tienda y no van a usar?**
+   > **Las pasarelas de pago simuladas externas o formularios fiscales complejos.** En esta etapa de DSI2, el backend gestiona autenticación JWT, roles y persistencia de pedidos. Un flujo de pago ficticio sin persistencia en base de datos es innecesario y se reemplaza por el endpoint `POST /pedidos`.
+
+3. **¿Qué le falta al prototipo que sí van a necesitar en el proyecto React?**
+   > 1. **Rutas declarativas con `react-router-dom`:** Navegación por URL (`/catalogo`, `/producto/:id`, `/carrito`, `/cuenta`).
+   > 2. **Persistencia del Carrito:** Almacenamiento en `localStorage` o sincronización con la sesión del usuario en PostgreSQL.
+   > 3. **Headers de Autorización JWT:** Inclusión del token `Bearer <token>` para proteger las operaciones de cuenta y administración.
 
 ---
 
@@ -28,58 +46,48 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 
 ```
 trabajo_completo/
-├── tienda-frontend/                      # Proyecto React + Vite con TailwindCSS (Consigna DSI2)
+├── tienda-frontend/                      # Aplicación React + Vite + TailwindCSS
 │   ├── src/
 │   │   ├── components/
-│   │   │   └── ProductCard.jsx           # Componente con precio_final, cuotas y garantia_meses
+│   │   │   └── ProductCard.jsx           # Tarjeta de producto con eventos de selección y compra
 │   │   ├── pages/
-│   │   │   └── CatalogPage.jsx           # Catálogo con isLoading, error, catálogo vacío y grilla
+│   │   │   ├── CatalogPage.jsx           # Pantalla 1: Catálogo interactivo
+│   │   │   ├── ProductDetailPage.jsx     # Pantalla 2: Ficha de producto (Pydantic Model)
+│   │   │   ├── CartPage.jsx              # Pantalla 3: Carrito y resumen de pedido
+│   │   │   └── AccountPage.jsx           # Pantalla 4: Mi Cuenta y Ley 25.326
 │   │   ├── services/
-│   │   │   └── api.js                    # getProductos() con validación de respuesta.ok
+│   │   │   └── api.js                    # Capa de consumo del backend /api/productos
 │   │   ├── context/
-│   │   │   └── CartContext.jsx           # Contexto para el estado del carrito
-│   │   ├── App.jsx
+│   │   │   └── CartContext.jsx           # Estado global reactivo del carrito de compras
+│   │   ├── App.jsx                       # Router de navegación entre las 4 pantallas
 │   │   ├── main.jsx
-│   │   └── index.css                     # Configuración de TailwindCSS
-│   ├── .env                              # Variables de entorno
+│   │   └── index.css                     # TailwindCSS
+│   ├── PROTOTIPO_AI_STUDIO.md            # Informe completo de la actividad de AI Studio
+│   ├── .env
 │   ├── vite.config.js                    # Proxy /api -> http://127.0.0.1:8000
-│   ├── package.json
-│   └── boceto-catalogo-stitch.png        # Captura de pantalla del boceto de catálogo
-├── cat_logo_fragancias_de_autor/         # Boceto Stitch: Catálogo interactivo de fragancias
-│   ├── code.html
-│   └── screen.png
-├── home_l_lixir_haute_parfumerie/        # Boceto Stitch: Home editorial de la Maison
-│   ├── code.html
-│   └── screen.png
-├── ficha_de_producto_santal_imperial/    # Boceto Stitch: Ficha técnica y acordes olfativos
-│   ├── code.html
-│   └── screen.png
-├── bolsa_y_checkout_l_lixir/             # Boceto Stitch: Bolsa y checkout
-│   ├── code.html
-│   └── screen.png
-├── haute_parfumerie_editorial/           # Sistema de diseño (DESIGN.md)
-│   └── DESIGN.md
-├── index.html                            # Portal de navegación interactivo
-└── stitch_tienda_e_commerce_de_perfumes.zip # Respaldo del proyecto
+│   └── package.json
+├── cat_logo_fragancias_de_autor/         # Captura y código de Catálogo
+├── ficha_de_producto_santal_imperial/    # Captura y código de Ficha de Producto
+├── bolsa_y_checkout_l_lixir/             # Captura y código de Carrito / Bolsa
+├── home_l_lixir_haute_parfumerie/        # Captura y código de Home
+├── index.html                            # Hub central de navegación
+└── package.json                          # Scripts para ejecutar npm run dev desde raíz
 ```
 
 ---
 
-## 🚀 Cómo Ejecutar el Proyecto
+## 🚀 Cómo Probar el Prototipo Navegable
 
-### 1. Iniciar el Backend DSI2 (FastAPI)
-```bash
-uvicorn app.main:app --reload
-```
-*El backend escuchará en `http://127.0.0.1:8000`.*
-
-### 2. Iniciar el Frontend (React + Vite)
-```bash
-cd tienda-frontend
-npm install
-npm run dev
-```
-*El servidor de desarrollo de Vite levantará en `http://localhost:5173`.*
+1. Inicia el servidor de desarrollo del frontend:
+   ```bash
+   npm run dev
+   ```
+2. Abre `http://localhost:5173/` en tu navegador.
+3. Podrás navegar fluidamente entre las 4 pantallas:
+   - Haz clic en cualquier producto del **Catálogo** para abrir su **Ficha de Producto**.
+   - Presiona **"Agregar a la Bolsa"** para incrementar el contador de compras.
+   - Ve a la **Bolsa** para ver el desglose en cuotas y muestras de cortesía.
+   - Accede a **Mi Cuenta** para revisar el perfil protegido y el historial.
 
 ---
 
