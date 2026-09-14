@@ -1,0 +1,10 @@
+{
+  "name": "stitch_tienda_e_commerce_de_perfumes",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix tienda-frontend run dev",
+    "build": "npm --prefix tienda-frontend run build",
+    "preview": "npm --prefix tienda-frontend run preview"
+  }
+}
