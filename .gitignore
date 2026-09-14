@@ -6,4 +6,4 @@ tienda-frontend/dist/
 *.log
 __pycache__/
 *.pyc
-
+*.db
