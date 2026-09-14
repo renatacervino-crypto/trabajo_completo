@@ -1,25 +1,18 @@
 # L'Élixir · Haute Parfumerie Paris
 ### Plataforma E-Commerce de Perfumes de Autor y Alta Gama (DSI2)
 
-Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio electrónico editorial inspirada en las históricas casas de fragancias parisinas. Este repositorio contiene tanto el **diseño y prototipo editorial de Google Stitch** como la implementación de la **aplicación frontend en React + Vite con TailwindCSS (`tienda-frontend`)** solicitada en la consigna de DSI2.
+Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio electrónico editorial inspirada en las históricas casas de fragancias parisinas. Este repositorio contiene tanto el **diseño y prototipo editorial de Google Stitch** como la implementación de la **aplicación frontend en React + Vite con TailwindCSS (`tienda-frontend`)**, conectada con el backend de FastAPI en DSI2.
 
 ---
 
-## ✅ Checklist de Entrega
+## ✅ Checklist de Entrega — Conexión con Backend (Clase 2)
 
-- [x] **Proyecto React + Vite creado y corriendo:** En la carpeta [`tienda-frontend/`](./tienda-frontend/).
-- [x] **TailwindCSS instalado y funcionando:** Configurado con `@tailwindcss/vite` y verificado con build exitoso.
-- [x] **Estructura de carpetas completa:**
-  - `src/components/`
-  - `src/pages/`
-  - `src/services/api.js`
-  - `src/context/`
-  - `src/App.jsx`
-  - `src/main.jsx`
-  - `.env`
-- [x] **Boceto de catálogo diseñado en Google Stitch:** Diseñado con grilla de productos, buscador/filtros, botón de agregar al carrito y header con la marca ([`tienda-frontend/boceto-catalogo-stitch.png`](./tienda-frontend/boceto-catalogo-stitch.png)).
-- [x] **Componente ProductCard creado:** En [`tienda-frontend/src/components/ProductCard.jsx`](./tienda-frontend/src/components/ProductCard.jsx).
-- [x] **Captura de pantalla del boceto de Stitch:** Incluida en [`tienda-frontend/boceto-catalogo-stitch.png`](./tienda-frontend/boceto-catalogo-stitch.png) y en [`cat_logo_fragancias_de_autor/screen.png`](./cat_logo_fragancias_de_autor/screen.png).
+- [x] **`services/api.js` con `getProductos()`:** Implementada con `fetch('/api/productos')` y manejo de errores.
+- [x] **Proxy de desarrollo configurado en `vite.config.js`:** Configurado el proxy para `/api` apuntando a `http://127.0.0.1:8000`.
+- [x] **Catálogo mostrando productos reales del backend:** Estado `productos` inicializado con `useState([])` y consumido con `useEffect` al montar la pantalla.
+- [x] **`ProductCard` con datos reales:** Muestra `nombre`, `precio_final`, `cuotas_cantidad`, `cuotas_valor` y `garantia_meses`.
+- [x] **Sin errores de CORS en la consola:** El tráfico pasa a través del proxy de desarrollo de Vite hacia el backend local de FastAPI.
+- [x] **Captura del catálogo funcionando:** Disponible en [`tienda-frontend/boceto-catalogo-stitch.png`](./tienda-frontend/boceto-catalogo-stitch.png).
 
 ---
 
@@ -30,20 +23,20 @@ trabajo_completo/
 ├── tienda-frontend/                      # Proyecto React + Vite con TailwindCSS (Consigna DSI2)
 │   ├── src/
 │   │   ├── components/
-│   │   │   └── ProductCard.jsx           # Componente ProductCard estático inspirado en el boceto
+│   │   │   └── ProductCard.jsx           # Componente con precio_final, cuotas y garantia_meses
 │   │   ├── pages/
-│   │   │   └── CatalogPage.jsx           # Catálogo interactivo con buscador, filtros y grilla
+│   │   │   └── CatalogPage.jsx           # Catálogo con useState([]) y useEffect para getProductos()
 │   │   ├── services/
-│   │   │   └── api.js                    # Capa de servicios para futura integración con backend
+│   │   │   └── api.js                    # getProductos() consumiendo /api/productos
 │   │   ├── context/
 │   │   │   └── CartContext.jsx           # Contexto para el estado del carrito
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css                     # Configuración de TailwindCSS
-│   ├── .env                              # Variables de entorno (VITE_API_URL)
-│   ├── vite.config.js                    # Configurado con @tailwindcss/vite
+│   ├── .env                              # Variables de entorno
+│   ├── vite.config.js                    # Proxy /api -> http://127.0.0.1:8000
 │   ├── package.json
-│   └── boceto-catalogo-stitch.png        # Captura de pantalla del boceto de Stitch
+│   └── boceto-catalogo-stitch.png        # Captura de pantalla del boceto de catálogo
 ├── cat_logo_fragancias_de_autor/         # Boceto Stitch: Catálogo interactivo de fragancias
 │   ├── code.html
 │   └── screen.png
@@ -58,34 +51,29 @@ trabajo_completo/
 │   └── screen.png
 ├── haute_parfumerie_editorial/           # Sistema de diseño (DESIGN.md)
 │   └── DESIGN.md
-├── index.html                            # Portal de navegación entre todas las vistas
+├── index.html                            # Portal de navegación interactivo
 └── stitch_tienda_e_commerce_de_perfumes.zip # Respaldo del proyecto
 ```
 
 ---
 
-## 🛠️ Cómo Ejecutar el Frontend React (`tienda-frontend`)
+## 🚀 Cómo Ejecutar el Frontend y Backend Simultáneamente
 
-1. Entra a la carpeta del frontend:
-   ```bash
-   cd tienda-frontend
-   ```
-2. Instala las dependencias (si aún no están instaladas):
-   ```bash
-   npm install
-   ```
-3. Inicia el servidor de desarrollo:
-   ```bash
-   npm run dev
-   ```
-4. Abre la URL en el navegador (por defecto `http://localhost:5173/`).
+### 1. Iniciar el Backend DSI2 (FastAPI)
+Desde la terminal donde se encuentra el backend:
+```bash
+uvicorn app.main:app --reload
+```
+*El backend quedará escuchando en `http://127.0.0.1:8000`.*
 
----
-
-## 🎨 Identidad Visual y Diseño Editorial
-
-- **Tipografía:** *Playfair Display* (editorial) y *Plus Jakarta Sans* (lectura técnica).
-- **Paleta de Color:** *Deep Onyx (`#1A1817`)*, *Champagne Gold (`#C5A880`)*, *Antique Amber (`#9B7E51`)*, *Warm Alabaster (`#FAF8F5`)* e *Ivory Stone (`#F5F2EB`)*.
+### 2. Iniciar el Frontend (React + Vite)
+Desde la carpeta `tienda-frontend`:
+```bash
+cd tienda-frontend
+npm install
+npm run dev
+```
+*El servidor de desarrollo de Vite levantará en `http://localhost:5173` y redireccionará las peticiones `/api/*` al backend de FastAPI mediante el proxy configurado.*
 
 ---
 
