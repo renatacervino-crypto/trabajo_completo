@@ -1,18 +1,13 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = '/api';
 
-export const getProducts = async () => {
-  try {
-    const response = await fetch(`${API_URL}/products`);
-    if (!response.ok) {
-      throw new Error('Error al obtener productos');
-    }
-    return await response.json();
-  } catch (error) {
-    console.warn('API aún no conectada con el backend:', error.message);
-    return [];
+export async function getProductos() {
+  const respuesta = await fetch(`${API_URL}/productos`);
+  if (!respuesta.ok) {
+    throw new Error('Error al consultar el backend');
   }
-};
+  return await respuesta.json();
+}
 
 export default {
-  getProducts,
+  getProductos,
 };
