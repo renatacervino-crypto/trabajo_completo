@@ -4,3 +4,6 @@ tienda-frontend/node_modules/
 tienda-frontend/dist/
 .DS_Store
 *.log
+__pycache__/
+*.pyc
+
