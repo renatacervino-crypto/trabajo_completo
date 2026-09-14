@@ -1,18 +1,26 @@
 # L'Élixir · Haute Parfumerie Paris
 ### Plataforma E-Commerce de Perfumes de Autor y Alta Gama (DSI2)
 
-Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio electrónico editorial inspirada en las históricas casas de fragancias parisinas. Este repositorio contiene tanto el **diseño y prototipo editorial de Google Stitch** como la implementación de la **aplicación frontend en React + Vite con TailwindCSS (`tienda-frontend`)**, conectada con el backend de FastAPI en DSI2.
+Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio electrónico editorial inspirada en las históricas casas de fragancias parisinas. Este repositorio contiene tanto el **diseño y prototipo editorial de Google Stitch** como la implementación de la **aplicación frontend en React + Vite con TailwindCSS (`tienda-frontend`)**, conectada con el backend de FastAPI y base de datos PostgreSQL en DSI2.
 
 ---
 
-## ✅ Checklist de Entrega — Conexión con Backend (Clase 2)
+## ✅ Checklist de Entrega — Clase 3: Carga y Error
 
-- [x] **`services/api.js` con `getProductos()`:** Implementada con `fetch('/api/productos')` y manejo de errores.
-- [x] **Proxy de desarrollo configurado en `vite.config.js`:** Configurado el proxy para `/api` apuntando a `http://127.0.0.1:8000`.
-- [x] **Catálogo mostrando productos reales del backend:** Estado `productos` inicializado con `useState([])` y consumido con `useEffect` al montar la pantalla.
-- [x] **`ProductCard` con datos reales:** Muestra `nombre`, `precio_final`, `cuotas_cantidad`, `cuotas_valor` y `garantia_meses`.
-- [x] **Sin errores de CORS en la consola:** El tráfico pasa a través del proxy de desarrollo de Vite hacia el backend local de FastAPI.
-- [x] **Captura del catálogo funcionando:** Disponible en [`tienda-frontend/boceto-catalogo-stitch.png`](./tienda-frontend/boceto-catalogo-stitch.png).
+- [x] **`api.js` lanza error si la respuesta no es ok:** Verifica `!respuesta.ok` y arroja `throw new Error('Error al consultar el backend')`.
+- [x] **Estado `isLoading` mostrando un mensaje de carga:** Controlado con `useState(true)`, activado antes del fetch y desactivado en `.finally()`.
+- [x] **Estado `error` mostrando un mensaje si algo falla:** Capturado con `.catch()`, almacena el mensaje de error y lo muestra en pantalla evitando pantallas en blanco.
+- [x] **Mensaje para catálogo vacío:** Muestra un aviso informativo cuando la base de datos no contiene productos disponibles.
+- [x] **Probado con el backend apagado:** Se muestra un contenedor con el mensaje de error legible y botón de reintento.
+- [x] **El catálogo se recupera al volver a prender el backend:** Al restablecer el servicio y reintentar, se cargan los productos reales automáticamente.
+
+---
+
+## 💡 Pregunta Conceptual (Para Pensar)
+
+> **¿Por qué te parece que no tuviste que cambiar nada en `ProductCard` ni en la lógica del componente, a pesar de que el backend cambió por completo de motor de datos?**
+>
+> **Respuesta:** Porque se respetó el contrato de la interfaz (API contract). Gracias a la arquitectura por capas y la centralización de llamadas en `services/api.js`, el frontend desacopla por completo la interfaz de usuario (`ProductCard`) de la tecnología de persistencia del backend (PostgreSQL). `ProductCard` solo requiere recibir sus props (`nombre`, `precio_final`, etc.) sin importar si los datos provienen de una lista en memoria o de una base de datos relacional.
 
 ---
 
@@ -25,9 +33,9 @@ trabajo_completo/
 │   │   ├── components/
 │   │   │   └── ProductCard.jsx           # Componente con precio_final, cuotas y garantia_meses
 │   │   ├── pages/
-│   │   │   └── CatalogPage.jsx           # Catálogo con useState([]) y useEffect para getProductos()
+│   │   │   └── CatalogPage.jsx           # Catálogo con isLoading, error, catálogo vacío y grilla
 │   │   ├── services/
-│   │   │   └── api.js                    # getProductos() consumiendo /api/productos
+│   │   │   └── api.js                    # getProductos() con validación de respuesta.ok
 │   │   ├── context/
 │   │   │   └── CartContext.jsx           # Contexto para el estado del carrito
 │   │   ├── App.jsx
@@ -57,23 +65,21 @@ trabajo_completo/
 
 ---
 
-## 🚀 Cómo Ejecutar el Frontend y Backend Simultáneamente
+## 🚀 Cómo Ejecutar el Proyecto
 
 ### 1. Iniciar el Backend DSI2 (FastAPI)
-Desde la terminal donde se encuentra el backend:
 ```bash
 uvicorn app.main:app --reload
 ```
-*El backend quedará escuchando en `http://127.0.0.1:8000`.*
+*El backend escuchará en `http://127.0.0.1:8000`.*
 
 ### 2. Iniciar el Frontend (React + Vite)
-Desde la carpeta `tienda-frontend`:
 ```bash
 cd tienda-frontend
 npm install
 npm run dev
 ```
-*El servidor de desarrollo de Vite levantará en `http://localhost:5173` y redireccionará las peticiones `/api/*` al backend de FastAPI mediante el proxy configurado.*
+*El servidor de desarrollo de Vite levantará en `http://localhost:5173`.*
 
 ---
 
