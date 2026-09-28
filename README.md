@@ -5,6 +5,16 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 
 ---
 
+## ✅ Checklist de Entrega — Variables de Entorno y CORS (Clase 6)
+
+- [x] **URL de la API configurada en `.env`:** Variable `VITE_API_URL=http://localhost:8000` en [`tienda-frontend/.env`](./tienda-frontend/.env).
+- [x] **`api.js` consume `import.meta.env.VITE_API_URL`:** Desacoplando la URL hardcodeada en el frontend.
+- [x] **Configuración de `CORSMiddleware` en FastAPI:** Implementado en [`app/main.py`](./app/main.py) autorizando orígenes seguros (`http://localhost:5173`).
+- [x] **Error de CORS provocado y comprobado:** Al levantar en otro puerto (ej: 5174), el navegador bloquea la solicitud con error de política CORS.
+- [x] **Comprobación de respuesta exitosa (200 OK):** Al levantar en puerto 5173, el backend responde con cabecera `Access-Control-Allow-Origin: http://localhost:5173`.
+
+---
+
 ## ✅ Checklist de Entrega — Paginación y Filtros Reales (Clase 4)
 
 - [x] **`api.js` manda `page`, `limit` y `nombre` como query params:** Armados mediante `URLSearchParams` en [`tienda-frontend/src/services/api.js`](./tienda-frontend/src/services/api.js).
@@ -15,6 +25,7 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 - [x] **Probado con al menos 5 productos en base de datos:** Base de datos con 7 fragancias de autor, permitiendo paginar fluidamente entre páginas.
 
 ---
+
 
 ## 🌟 Funcionalidades del Prototipo Completo
 

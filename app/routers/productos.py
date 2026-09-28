@@ -12,14 +12,16 @@ router = APIRouter(prefix="/productos", tags=["Productos"])
 @router.get("/", response_model=List[schemas.ProductoOut], include_in_schema=False)
 def listar_productos(
     skip: int = Query(0, ge=0, description="Cantidad de registros a omitir"),
+    page: Optional[int] = Query(None, ge=0, description="Número de página"),
     limit: int = Query(100, ge=1, description="Límite máximo de registros a retornar"),
     nombre: Optional[str] = Query(None, description="Filtro opcional por coincidencia de nombre"),
     precio_max: Optional[float] = Query(None, ge=0, description="Filtro opcional por precio máximo"),
     db: Session = Depends(get_db)
 ):
+    offset = (page * limit) if page is not None else skip
     return productos_service.listar_productos(
         db=db,
-        skip=skip,
+        skip=offset,
         limit=limit,
         nombre=nombre,
         precio_max=precio_max
