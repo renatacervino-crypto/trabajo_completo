@@ -1,8 +1,9 @@
 from fastapi import FastAPI
+from app.core.config import settings
 from app.routers import productos as productos_router
 
 app = FastAPI(
-    title="L'Élixir - API de Productos",
+    title=settings.PROJECT_NAME,
     description="API REST para la gestión de productos de la tienda de perfumes de autor L'Élixir",
     version="1.0.0"
 )
