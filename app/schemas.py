@@ -18,7 +18,7 @@ class UsuarioResponse(UsuarioBase):
 
 
 # --- Schemas de Producto ---
-class ProductoBase(BaseModel):
+class ProductoCreate(BaseModel):
     nombre: str
     precio_final: float
     cuotas_cantidad: Optional[int] = 1
@@ -26,14 +26,15 @@ class ProductoBase(BaseModel):
     garantia_meses: Optional[int] = 0
     stock: int = 0
 
-class ProductoCreate(ProductoBase):
-    pass
-
-class ProductoResponse(ProductoBase):
+class ProductoOut(ProductoCreate):
     id: int
 
     class Config:
         from_attributes = True
+
+# Alias para compatibilidad con código previo
+ProductoBase = ProductoCreate
+ProductoResponse = ProductoOut
 
 
 # --- Schemas de ItemPedido ---
