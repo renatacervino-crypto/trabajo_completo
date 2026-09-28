@@ -3,13 +3,17 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 
 def crear_producto(db: Session, producto: schemas.ProductoCreate) -> models.Producto:
+    cuotas_cant = producto.cuotas_cantidad if producto.cuotas_cantidad and producto.cuotas_cantidad > 0 else 1
+    cuotas_val = producto.cuotas_valor if producto.cuotas_valor and producto.cuotas_valor > 0 else round(producto.precio_final / cuotas_cant, 2)
+
     db_producto = models.Producto(
         nombre=producto.nombre,
         precio_final=producto.precio_final,
-        cuotas_cantidad=producto.cuotas_cantidad,
-        cuotas_valor=producto.cuotas_valor,
-        garantia_meses=producto.garantia_meses,
-        stock=producto.stock
+        cuotas_cantidad=cuotas_cant,
+        cuotas_valor=cuotas_val,
+        garantia_meses=producto.garantia_meses or 12,
+        stock=producto.stock or 0,
+        imagen_url=producto.imagen_url
     )
     db.add(db_producto)
     db.commit()

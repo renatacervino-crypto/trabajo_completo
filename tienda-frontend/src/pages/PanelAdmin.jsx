@@ -8,22 +8,33 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 export default function PanelAdmin() {
   const { usuario } = useAuth();
 
-  // Estados de catálogo y selección
+  // Estados de catálogo
   const [productos, setProductos] = useState([]);
   const [isLoadingProductos, setIsLoadingProductos] = useState(false);
+
+  // Estados para Cambiar Imagen a Producto Existente
   const [productoSeleccionado, setProductoSeleccionado] = useState('');
+  const [archivoExistente, setArchivoExistente] = useState(null);
+  const [vistaPreviaExistente, setVistaPreviaExistente] = useState(null);
+  const [archivoInfoExistente, setArchivoInfoExistente] = useState(null);
+  const [isSubmittingExistente, setIsSubmittingExistente] = useState(false);
 
-  // Estados de selección de archivo e imagen
-  const [archivoSeleccionado, setArchivoSeleccionado] = useState(null);
-  const [vistaPrevia, setVistaPrevia] = useState(null);
-  const [archivoInfo, setArchivoInfo] = useState(null);
+  // Estados para Crear Nuevo Producto
+  const [nuevoNombre, setNuevoNombre] = useState('');
+  const [nuevoPrecio, setNuevoPrecio] = useState('');
+  const [nuevasCuotas, setNuevasCuotas] = useState(6);
+  const [nuevaGarantia, setNuevaGarantia] = useState(12);
+  const [nuevoStock, setNuevoStock] = useState(10);
+  const [archivoNuevo, setArchivoNuevo] = useState(null);
+  const [vistaPreviaNuevo, setVistaPreviaNuevo] = useState(null);
+  const [archivoInfoNuevo, setArchivoInfoNuevo] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
 
-  // Estados de validación y respuesta
+  // Notificaciones y Errores
   const [errorValidacion, setErrorValidacion] = useState(null);
   const [mensajeExito, setMensajeExito] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Cargar productos para el selector
+  // Cargar productos
   const cargarProductos = () => {
     setIsLoadingProductos(true);
     getProductos({ limit: 100 })
@@ -41,92 +52,177 @@ export default function PanelAdmin() {
     cargarProductos();
   }, []);
 
-  // Manejo de selección de archivo con validación de tipo y tamaño (Clase 10)
-  const handleFileChange = (e) => {
+  // Función reutilizable para validar archivo de imagen (< 2MB y tipo imagen)
+  const validarArchivo = (file) => {
+    const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
+    const tamanioMB = (file.size / (1024 * 1024)).toFixed(2);
+    const tamanioKB = (file.size / 1024).toFixed(1);
+
+    const info = {
+      nombre: file.name,
+      tipo: file.type || 'Desconocido',
+      tamanioStr: file.size >= 1024 * 1024 ? `${tamanioMB} MB` : `${tamanioKB} KB`,
+      bytes: file.size,
+    };
+
+    if (!file.type.startsWith('image/')) {
+      return {
+        valido: false,
+        error: `El archivo "${file.name}" no es una imagen válida (debe ser JPG, PNG, WebP o GIF).`,
+        info,
+      };
+    }
+
+    if (file.size > MAX_SIZE) {
+      return {
+        valido: false,
+        error: `El archivo "${file.name}" supera el límite de 2 MB (pesa ${tamanioMB} MB).`,
+        info,
+      };
+    }
+
+    return { valido: true, error: null, info };
+  };
+
+  // Manejador archivo para producto existente
+  const handleFileChangeExistente = (e) => {
     const file = e.target.files?.[0];
     setErrorValidacion(null);
     setMensajeExito(null);
 
     if (!file) {
-      setArchivoSeleccionado(null);
-      setVistaPrevia(null);
-      setArchivoInfo(null);
+      setArchivoExistente(null);
+      setVistaPreviaExistente(null);
+      setArchivoInfoExistente(null);
       return;
     }
 
-    const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
-    const tamanioMB = (file.size / (1024 * 1024)).toFixed(2);
-    const tamanioKB = (file.size / 1024).toFixed(1);
+    const { valido, error, info } = validarArchivo(file);
+    setArchivoInfoExistente(info);
 
-    setArchivoInfo({
-      nombre: file.name,
-      tipo: file.type || 'Desconocido',
-      tamanioStr: file.size >= 1024 * 1024 ? `${tamanioMB} MB` : `${tamanioKB} KB`,
-      bytes: file.size,
-    });
-
-    // 1. Validación de Tipo: Debe ser imagen
-    if (!file.type.startsWith('image/')) {
-      setErrorValidacion(
-        `El archivo "${file.name}" no es una imagen válida (tipo detectado: ${file.type || 'no-imagen'}). Solo se permiten archivos JPEG, PNG, WebP o GIF.`
-      );
-      setArchivoSeleccionado(null);
-      setVistaPrevia(null);
+    if (!valido) {
+      setErrorValidacion(error);
+      setArchivoExistente(null);
+      setVistaPreviaExistente(null);
       return;
     }
 
-    // 2. Validación de Tamaño: Máximo 2 MB
-    if (file.size > MAX_SIZE) {
-      setErrorValidacion(
-        `El archivo "${file.name}" supera el límite de 2 MB (tamaño recibido: ${tamanioMB} MB). Por favor seleccioná una imagen optimizada de menor peso.`
-      );
-      setArchivoSeleccionado(null);
-      setVistaPrevia(null);
-      return;
-    }
-
-    // Archivo válido: Generar vista previa
-    setArchivoSeleccionado(file);
-    const previewUrl = URL.createObjectURL(file);
-    setVistaPrevia(previewUrl);
+    setArchivoExistente(file);
+    setVistaPreviaExistente(URL.createObjectURL(file));
   };
 
-  // Envío del FormData (LA REGLA QUE MÁS SE OLVIDA: NO poner Content-Type manual)
-  const handleSubirImagen = async (e) => {
-    e.preventDefault();
-    if (!productoSeleccionado) {
-      setErrorValidacion('Por favor seleccioná el producto al que deseas asociar la imagen.');
+  // Manejador archivo para NUEVO producto
+  const handleFileChangeNuevo = (e) => {
+    const file = e.target.files?.[0];
+    setErrorValidacion(null);
+    setMensajeExito(null);
+
+    if (!file) {
+      setArchivoNuevo(null);
+      setVistaPreviaNuevo(null);
+      setArchivoInfoNuevo(null);
       return;
     }
 
-    if (!archivoSeleccionado) {
-      setErrorValidacion('Por favor elegí una imagen válida de hasta 2 MB antes de subir.');
+    const { valido, error, info } = validarArchivo(file);
+    setArchivoInfoNuevo(info);
+
+    if (!valido) {
+      setErrorValidacion(error);
+      setArchivoNuevo(null);
+      setVistaPreviaNuevo(null);
+      return;
+    }
+
+    setArchivoNuevo(file);
+    setVistaPreviaNuevo(URL.createObjectURL(file));
+  };
+
+  // Subir imagen a producto existente
+  const handleSubirImagenExistente = async (e) => {
+    e.preventDefault();
+    if (!productoSeleccionado) {
+      setErrorValidacion('Seleccioná el perfume al que deseas cambiar la imagen.');
+      return;
+    }
+    if (!archivoExistente) {
+      setErrorValidacion('Por favor elegí una imagen válida antes de subir.');
       return;
     }
 
     try {
-      setIsSubmitting(true);
+      setIsSubmittingExistente(true);
       setErrorValidacion(null);
       setMensajeExito(null);
 
-      // Llamada al backend pasando FormData SIN header Content-Type
-      const productoActualizado = await subirImagenProducto(productoSeleccionado, archivoSeleccionado);
-
-      setMensajeExito(
-        `✓ ¡Imagen subida exitosamente! El producto "${productoActualizado.nombre}" ahora tiene su imagen asignada y visible en el catálogo.`
-      );
-
-      // Limpiar input y vista previa
-      setArchivoSeleccionado(null);
-      setVistaPrevia(null);
-      setArchivoInfo(null);
-
-      // Recargar catálogo para ver cambios
+      const prodActualizado = await subirImagenProducto(productoSeleccionado, archivoExistente);
+      setMensajeExito(`✓ ¡Imagen actualizada para "${prodActualizado.nombre}"! Ya está visible en la tienda.`);
+      setArchivoExistente(null);
+      setVistaPreviaExistente(null);
+      setArchivoInfoExistente(null);
       cargarProductos();
     } catch (err) {
-      setErrorValidacion(err.message || 'Error al subir la imagen al servidor.');
+      setErrorValidacion(err.message || 'Error al subir la imagen.');
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingExistente(false);
+    }
+  };
+
+  // Crear NUEVO producto en el catálogo
+  const handleCrearNuevoProducto = async (e) => {
+    e.preventDefault();
+    if (!nuevoNombre.trim()) {
+      setErrorValidacion('El nombre del perfume es obligatorio.');
+      return;
+    }
+    const precioNum = parseFloat(nuevoPrecio);
+    if (!precioNum || precioNum <= 0) {
+      setErrorValidacion('Ingresá un precio válido mayor a 0.');
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      setErrorValidacion(null);
+      setMensajeExito(null);
+
+      // 1. Crear el producto en la base de datos
+      const payload = {
+        nombre: nuevoNombre.trim(),
+        precio_final: precioNum,
+        cuotas_cantidad: Number(nuevasCuotas) || 1,
+        cuotas_valor: Math.round(precioNum / (Number(nuevasCuotas) || 1)),
+        garantia_meses: Number(nuevaGarantia) || 12,
+        stock: Number(nuevoStock) || 0,
+        // Si no subió foto local, usamos una imagen de perfume de autor elegante por defecto
+        imagen_url: archivoNuevo ? null : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80',
+      };
+
+      const productoCreado = await crearProducto(payload);
+
+      // 2. Si seleccionó un archivo local, subirlo con FormData
+      if (archivoNuevo) {
+        await subirImagenProducto(productoCreado.id, archivoNuevo);
+      }
+
+      setMensajeExito(`✓ ¡Perfume "${productoCreado.nombre}" creado exitosamente con su fotografía y publicado en el catálogo!`);
+
+      // Limpiar formulario de nuevo producto
+      setNuevoNombre('');
+      setNuevoPrecio('');
+      setNuevasCuotas(6);
+      setNuevaGarantia(12);
+      setNuevoStock(10);
+      setArchivoNuevo(null);
+      setVistaPreviaNuevo(null);
+      setArchivoInfoNuevo(null);
+
+      // Recargar catálogo
+      cargarProductos();
+    } catch (err) {
+      setErrorValidacion(err.message || 'No se pudo crear el perfume.');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -146,10 +242,10 @@ export default function PanelAdmin() {
                 Área Restringida · Rol: {usuario?.rol}
               </span>
               <h1 className="text-2xl sm:text-3xl font-serif mt-1">
-                Panel de Administración & Catálogo Visual
+                Panel de Administración & Catálogo
               </h1>
               <p className="text-xs text-stone-300 mt-1 font-light">
-                Gestión de productos, subida de imágenes con FormData (Clase 10) y seguridad del sistema.
+                Agregá nuevos perfumes, gestioná inventario y subí imágenes reales con FormData (Clase 10).
               </p>
             </div>
             <Link
@@ -161,147 +257,240 @@ export default function PanelAdmin() {
           </div>
         </div>
 
-        {/* Sección Principal: Subida de Imágenes con Vista Previa (Clase 10) */}
+        {/* Notificaciones Globales */}
+        {errorValidacion && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
+            <span className="font-bold text-sm">⚠️</span>
+            <div>
+              <p className="font-semibold">Error:</p>
+              <p className="mt-0.5">{errorValidacion}</p>
+            </div>
+          </div>
+        )}
+
+        {mensajeExito && (
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-start gap-2">
+            <span className="font-bold text-sm">✓</span>
+            <div>
+              <p className="font-semibold">¡Operación exitosa!</p>
+              <p className="mt-0.5">{mensajeExito}</p>
+            </div>
+          </div>
+        )}
+
+        {/* SECCIÓN 1: AGREGAR NUEVO PERFUME AL CATÁLOGO */}
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-stone-200 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
-            <span className="p-1 rounded bg-amber-100 text-amber-900 text-sm">📸</span>
+            <span className="p-1.5 rounded-lg bg-stone-900 text-amber-400 text-sm">✨</span>
             <h2 className="text-lg font-serif text-stone-900">
-              Subida de Imágenes de Producto (Clase 10)
+              Agregar Nuevo Perfume al Catálogo
             </h2>
           </div>
-          <p className="text-xs text-stone-600 mb-6 font-light leading-relaxed">
-            Elegí una imagen de producto, comprobalo en la <strong>vista previa interactiva</strong> y subila mediante <code className="bg-stone-100 text-stone-800 px-1 py-0.5 rounded text-xs">FormData</code>.  
-            <strong> La regla que más se olvida:</strong> Al mandar el archivo, no se le especifica <code className="bg-amber-50 text-amber-900 px-1 py-0.5 rounded text-xs font-mono font-bold">Content-Type</code> al fetch; el navegador lo arma automáticamente junto con el boundary.
+          <p className="text-xs text-stone-500 mb-6 font-light">
+            Completá los datos técnicos de la fragancia y seleccioná su fotografía. Al guardar, aparecerá inmediatamente en la tienda pública.
           </p>
 
-          {/* Avisos y Notificaciones */}
-          {errorValidacion && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
-              <span className="font-bold text-sm">⚠️</span>
-              <div>
-                <p className="font-semibold">Error de validación:</p>
-                <p className="mt-0.5">{errorValidacion}</p>
-              </div>
-            </div>
-          )}
-
-          {mensajeExito && (
-            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-start gap-2">
-              <span className="font-bold text-sm">✓</span>
-              <div>
-                <p className="font-semibold">Operación exitosa:</p>
-                <p className="mt-0.5">{mensajeExito}</p>
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubirImagen} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Selector de Producto */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-2">
-                  1. Seleccionar Producto del Catálogo *
-                </label>
-                {isLoadingProductos ? (
-                  <div className="text-xs text-stone-400 py-2">Cargando productos...</div>
-                ) : (
-                  <select
-                    value={productoSeleccionado}
-                    onChange={(e) => setProductoSeleccionado(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
-                    required
-                  >
-                    <option value="" disabled>Elegí un perfume...</option>
-                    {productos.map((prod) => (
-                      <option key={prod.id} value={prod.id}>
-                        #{prod.id} · {prod.nombre} (${prod.precio_final?.toLocaleString('es-AR')}) {prod.imagen_url ? '· [Ya tiene imagen]' : '· [Sin imagen]'}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <p className="text-[11px] text-stone-500 mt-1.5">
-                  La imagen subida reemplazará la fotografía actual en el catálogo público y en la ficha del perfume.
-                </p>
-              </div>
-
-              {/* Selector de Archivo con Validaciones */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-2">
-                  2. Elegir Archivo de Imagen (Máximo 2 MB) *
+          <form onSubmit={handleCrearNuevoProducto} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1.5">
+                  Nombre de la Fragancia *
                 </label>
                 <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  onChange={handleFileChange}
-                  className="w-full text-xs text-stone-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-stone-900 file:text-white hover:file:bg-stone-800 file:cursor-pointer cursor-pointer border border-stone-300 rounded-xl p-1 bg-stone-50"
+                  type="text"
+                  required
+                  value={nuevoNombre}
+                  onChange={(e) => setNuevoNombre(e.target.value)}
+                  placeholder="Ej: Bois de Santal Extrait 50ml"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                 />
-                <div className="flex items-center justify-between text-[11px] text-stone-500 mt-1.5">
-                  <span>Formatos: JPEG, PNG, WebP o GIF</span>
-                  <span className="font-semibold text-stone-700">Límite: 2 MB</span>
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1.5">
+                  Precio Final ($ ARS) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  step="1000"
+                  value={nuevoPrecio}
+                  onChange={(e) => setNuevoPrecio(e.target.value)}
+                  placeholder="Ej: 295000"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1.5">
+                  Cuotas sin Interés
+                </label>
+                <select
+                  value={nuevasCuotas}
+                  onChange={(e) => setNuevasCuotas(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
+                >
+                  <option value="1">1 pago</option>
+                  <option value="3">3 cuotas sin interés</option>
+                  <option value="6">6 cuotas sin interés</option>
+                  <option value="12">12 cuotas sin interés</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1.5">
+                  Garantía (meses)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={nuevaGarantia}
+                  onChange={(e) => setNuevaGarantia(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1.5">
+                  Stock Inicial (unidades)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={nuevoStock}
+                  onChange={(e) => setNuevoStock(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono"
+                />
               </div>
             </div>
 
-            {/* Vista Previa Interactiva (Clase 10) */}
-            {vistaPrevia && archivoInfo && (
-              <div className="border border-stone-200 rounded-xl p-5 bg-stone-50">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-700 mb-3 flex items-center gap-1.5">
-                  <span>👁️</span> Vista Previa Antes de Subir
-                </h3>
-                <div className="flex flex-col sm:flex-row items-center gap-6">
-                  <div className="w-36 h-36 rounded-lg bg-white border border-stone-300 overflow-hidden shadow-xs flex items-center justify-center">
-                    <img
-                      src={vistaPrevia}
-                      alt="Vista previa"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="text-xs space-y-1.5 text-stone-700">
-                    <p><strong>Archivo:</strong> <span className="font-mono text-stone-900">{archivoInfo.nombre}</span></p>
-                    <p><strong>Tipo MIME:</strong> <span className="font-mono text-stone-900">{archivoInfo.tipo}</span></p>
-                    <p>
-                      <strong>Tamaño:</strong>{' '}
-                      <span className={`font-semibold ${archivoInfo.bytes > 2 * 1024 * 1024 ? 'text-red-700' : 'text-emerald-700'}`}>
-                        {archivoInfo.tamanioStr} (Válido: &lt; 2 MB)
-                      </span>
-                    </p>
-                    <p className="text-[11px] text-stone-500 pt-1">
-                      Todo listo para transferir con FormData al endpoint <code className="bg-stone-200 px-1 py-0.5 rounded font-mono">POST /productos/{productoSeleccionado}/imagen</code>.
-                    </p>
-                  </div>
+            {/* Selector de Fotografía para el nuevo perfume */}
+            <div className="border-t border-stone-100 pt-5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-2">
+                Fotografía del Perfume (Máximo 2 MB - JPEG, PNG o WebP)
+              </label>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleFileChangeNuevo}
+                className="w-full text-xs text-stone-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-stone-900 file:text-white hover:file:bg-stone-800 file:cursor-pointer cursor-pointer border border-stone-300 rounded-xl p-1 bg-stone-50"
+              />
+              <p className="text-[11px] text-stone-500 mt-1">
+                Opcional: Si no seleccionás archivo, se le asignará una imagen editorial automática que podés cambiar luego.
+              </p>
+            </div>
+
+            {/* Vista Previa del nuevo perfume */}
+            {vistaPreviaNuevo && archivoInfoNuevo && (
+              <div className="border border-stone-200 rounded-xl p-4 bg-stone-50 flex items-center gap-4">
+                <div className="w-24 h-24 rounded-lg bg-white border border-stone-300 overflow-hidden shadow-xs shrink-0 flex items-center justify-center">
+                  <img src={vistaPreviaNuevo} alt="Preview nuevo" className="w-full h-full object-cover" />
+                </div>
+                <div className="text-xs space-y-1 text-stone-700">
+                  <p className="font-semibold text-stone-900">Vista Previa de la Fotografía</p>
+                  <p><strong>Archivo:</strong> {archivoInfoNuevo.nombre}</p>
+                  <p><strong>Tamaño:</strong> <span className="text-emerald-700 font-semibold">{archivoInfoNuevo.tamanioStr} (&lt; 2 MB)</span></p>
                 </div>
               </div>
             )}
 
-            {/* Botón de Subida */}
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={isSubmitting || !archivoSeleccionado}
-                className="w-full sm:w-auto px-8 py-3 bg-stone-900 hover:bg-stone-800 disabled:bg-stone-300 text-white rounded-xl text-xs font-semibold tracking-wider uppercase transition-colors shadow-sm cursor-pointer"
-              >
-                {isSubmitting ? 'Subiendo imagen con FormData...' : 'Subir Imagen y Actualizar Tienda'}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isCreating}
+              className="px-8 py-3 bg-stone-900 hover:bg-stone-800 disabled:bg-stone-300 text-white rounded-xl text-xs font-semibold tracking-wider uppercase transition-colors shadow-sm cursor-pointer"
+            >
+              {isCreating ? 'Guardando y publicando...' : '➕ Guardar y Publicar Perfume'}
+            </button>
           </form>
         </div>
 
-        {/* Galería Visual de Productos con sus Imágenes Reales */}
+        {/* SECCIÓN 2: CAMBIAR IMAGEN A PERFUME EXISTENTE (Clase 10) */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-stone-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="p-1 rounded bg-amber-100 text-amber-900 text-sm">📸</span>
+            <h2 className="text-lg font-serif text-stone-900">
+              Cambiar Imagen a un Perfume Existente (Clase 10)
+            </h2>
+          </div>
+          <p className="text-xs text-stone-500 mb-6 font-light">
+            Elegí un perfume del catálogo, visualizá la foto en la vista previa interactiva y subila mediante <code className="bg-stone-100 text-stone-800 px-1 py-0.5 rounded text-xs">FormData</code> sin cabecera Content-Type manual.
+          </p>
+
+          <form onSubmit={handleSubirImagenExistente} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-2">
+                  Seleccionar Perfume *
+                </label>
+                <select
+                  value={productoSeleccionado}
+                  onChange={(e) => setProductoSeleccionado(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
+                  required
+                >
+                  <option value="" disabled>Elegí un perfume...</option>
+                  {productos.map((prod) => (
+                    <option key={prod.id} value={prod.id}>
+                      #{prod.id} · {prod.nombre} (${prod.precio_final?.toLocaleString('es-AR')})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-2">
+                  Elegir Nueva Fotografía (Máximo 2 MB) *
+                </label>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleFileChangeExistente}
+                  className="w-full text-xs text-stone-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-stone-900 file:text-white hover:file:bg-stone-800 file:cursor-pointer cursor-pointer border border-stone-300 rounded-xl p-1 bg-stone-50"
+                />
+              </div>
+            </div>
+
+            {vistaPreviaExistente && archivoInfoExistente && (
+              <div className="border border-stone-200 rounded-xl p-4 bg-stone-50 flex items-center gap-4">
+                <div className="w-24 h-24 rounded-lg bg-white border border-stone-300 overflow-hidden shadow-xs shrink-0 flex items-center justify-center">
+                  <img src={vistaPreviaExistente} alt="Preview existente" className="w-full h-full object-cover" />
+                </div>
+                <div className="text-xs space-y-1 text-stone-700">
+                  <p className="font-semibold text-stone-900">Vista Previa de la Imagen</p>
+                  <p><strong>Archivo:</strong> {archivoInfoExistente.nombre}</p>
+                  <p><strong>Tipo MIME:</strong> {archivoInfoExistente.tipo}</p>
+                  <p><strong>Tamaño:</strong> <span className="text-emerald-700 font-semibold">{archivoInfoExistente.tamanioStr} (&lt; 2 MB)</span></p>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmittingExistente || !archivoExistente}
+              className="px-8 py-3 bg-stone-900 hover:bg-stone-800 disabled:bg-stone-300 text-white rounded-xl text-xs font-semibold tracking-wider uppercase transition-colors shadow-sm cursor-pointer"
+            >
+              {isSubmittingExistente ? 'Subiendo imagen...' : 'Subir y Actualizar Imagen'}
+            </button>
+          </form>
+        </div>
+
+        {/* SECCIÓN 3: GALERÍA DE PERFUMES EN LA BASE DE DATOS */}
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-stone-200 shadow-sm">
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
             <div>
               <h2 className="text-lg font-serif text-stone-900">
-                Imágenes Actuales en la Base de Datos
+                Perfumes en el Catálogo ({productos.length} items)
               </h2>
               <p className="text-xs text-stone-500 font-light">
-                Visualización de las fotografías de autor asociadas a cada registro.
+                Visualización en tiempo real de todos los productos almacenados en la base de datos.
               </p>
             </div>
             <button
               onClick={cargarProductos}
               className="text-xs text-amber-800 hover:underline cursor-pointer"
             >
-              Actualizar Galería
+              Actualizar Lista
             </button>
           </div>
 
@@ -316,12 +505,14 @@ export default function PanelAdmin() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-[11px] text-stone-400 text-center px-2">Sin imagen subida</span>
+                    <span className="text-[11px] text-stone-400 text-center px-2">Sin imagen</span>
                   )}
                 </div>
                 <div>
+                  <span className="text-[10px] uppercase font-mono text-stone-400">ID #{prod.id}</span>
                   <h4 className="text-xs font-serif font-medium text-stone-900 line-clamp-1">{prod.nombre}</h4>
-                  <p className="text-[11px] font-mono text-stone-600 mt-0.5">${prod.precio_final?.toLocaleString('es-AR')}</p>
+                  <p className="text-xs font-mono font-bold text-amber-900 mt-0.5">${prod.precio_final?.toLocaleString('es-AR')}</p>
+                  <p className="text-[10px] text-stone-500 mt-1">Stock: {prod.stock ?? 0} u. · {prod.cuotas_cantidad} cuotas</p>
                 </div>
               </div>
             ))}
