@@ -5,6 +5,29 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 
 ---
 
+## ✅ Checklist de Entrega — Registro, Login y Rutas Protegidas (Clase 7)
+
+- [x] **Formulario controlado de Registro:** Implementado en [`tienda-frontend/src/pages/Registro.jsx`](./tienda-frontend/src/pages/Registro.jsx) con `useState` para `nombre`, `email`, `password` y `acepto_tratamiento`.
+- [x] **Consentimiento válido (Ley 25.326):** Checkbox que comienza desmarcado, describe qué datos se guardan y para qué, y deshabilita el botón de envío hasta ser aceptado.
+- [x] **Formulario controlado de Login:** Implementado en [`tienda-frontend/src/pages/Login.jsx`](./tienda-frontend/src/pages/Login.jsx) enviando `form-urlencoded` con `username` y `password` a `/auth/login`.
+- [x] **Seguridad y contraseñas hasheadas con Bcrypt:** La regla que no se negocia: ninguna contraseña se almacena en texto plano en la base de datos ([`app/core/security.py`](./app/core/security.py) y [`app/services/auth.py`](./app/services/auth.py)).
+- [x] **Tokens JWT y endpoints de autenticación en FastAPI:** Endpoints `/auth/register`, `/auth/login`, `/auth/refresh` y `/auth/me` con tokens bearer de 30 minutos ([`app/routers/auth.py`](./app/routers/auth.py)).
+- [x] **Centralización en `services/api.js`:** Métodos `registrar()`, `login()`, `getMe()` y `authHeaders()` con cabecera `Authorization: Bearer <token>`.
+- [x] **`AuthContext` y persistencia en `localStorage`:** Sesión global en [`tienda-frontend/src/context/AuthContext.jsx`](./tienda-frontend/src/context/AuthContext.jsx), sobreviviendo a la recarga y verificando `/auth/me` con estado `cargando`.
+- [x] **Componente `RutaProtegida`:** En [`tienda-frontend/src/components/RutaProtegida.jsx`](./tienda-frontend/src/components/RutaProtegida.jsx) protegiendo `/mi-cuenta` por sesión y `/admin` por rol (`rol="admin"`). Si un usuario `customer` intenta ingresar a `/admin`, se redirige al catálogo.
+
+---
+
+## ✅ Checklist de Entrega — Variables de Entorno y CORS (Clase 6)
+
+- [x] **URL de la API configurada en `.env`:** Variable `VITE_API_URL=http://localhost:8000` en [`tienda-frontend/.env`](./tienda-frontend/.env).
+- [x] **`api.js` consume `import.meta.env.VITE_API_URL`:** Desacoplando la URL hardcodeada en el frontend.
+- [x] **Configuración de `CORSMiddleware` en FastAPI:** Implementado en [`app/main.py`](./app/main.py) autorizando orígenes seguros (`http://localhost:5173`).
+- [x] **Error de CORS provocado y comprobado:** Al levantar en otro puerto (ej: 5174), el navegador bloquea la solicitud con error de política CORS.
+- [x] **Comprobación de respuesta exitosa (200 OK):** Al levantar en puerto 5173, el backend responde con cabecera `Access-Control-Allow-Origin: http://localhost:5173`.
+
+---
+
 ## ✅ Checklist de Entrega — Paginación y Filtros Reales (Clase 4)
 
 - [x] **`api.js` manda `page`, `limit` y `nombre` como query params:** Armados mediante `URLSearchParams` en [`tienda-frontend/src/services/api.js`](./tienda-frontend/src/services/api.js).
@@ -15,6 +38,7 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 - [x] **Probado con al menos 5 productos en base de datos:** Base de datos con 7 fragancias de autor, permitiendo paginar fluidamente entre páginas.
 
 ---
+
 
 ## 🌟 Funcionalidades del Prototipo Completo
 

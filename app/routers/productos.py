@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app import schemas
+from app import schemas, models
 from app.services import productos as productos_service
+from app.routers.auth import require_admin
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
 
@@ -12,14 +13,16 @@ router = APIRouter(prefix="/productos", tags=["Productos"])
 @router.get("", response_model=List[schemas.ProductoOut], include_in_schema=False)
 def listar_productos(
     skip: int = Query(0, ge=0, description="Cantidad de registros a omitir"),
+    page: Optional[int] = Query(None, ge=0, description="Número de página"),
     limit: int = Query(100, ge=1, description="Límite máximo de registros a retornar"),
     nombre: Optional[str] = Query(None, description="Filtro opcional por coincidencia de nombre"),
     precio_max: Optional[float] = Query(None, ge=0, description="Filtro opcional por precio máximo"),
     db: Session = Depends(get_db)
 ):
+    offset = (page * limit) if page is not None else skip
     return productos_service.listar_productos(
         db=db,
-        skip=skip,
+        skip=offset,
         limit=limit,
         nombre=nombre,
         precio_max=precio_max
@@ -42,6 +45,7 @@ def obtener_producto(
 @router.post("", response_model=schemas.ProductoOut, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def crear_producto(
     producto: schemas.ProductoCreate,
+    admin: models.Usuario = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     return productos_service.crear_producto(db=db, producto=producto)
