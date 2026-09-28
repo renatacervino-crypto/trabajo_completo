@@ -184,6 +184,47 @@ export async function solicitarBaja({ motivo = '' } = {}) {
   return res.json();
 }
 
+export async function crearProducto(productoData) {
+  const res = await fetch(`${API_URL}/productos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify(productoData),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'No se pudo crear el producto');
+  }
+
+  return res.json();
+}
+
+export async function subirImagenProducto(productoId, archivo) {
+  const formData = new FormData();
+  formData.append('file', archivo);
+
+  // LA REGLA QUE MÁS SE OLVIDA:
+  // Cuando mandás un FormData, NO le pongas el Content-Type al fetch.
+  // El navegador lo arma solo con el boundary.
+  const headers = authHeaders(); // Incluye solo Authorization: Bearer <token>
+
+  const res = await fetch(`${API_URL}/productos/${productoId}/imagen`, {
+    method: 'POST',
+    headers, // SIN 'Content-Type'
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Error al subir la imagen');
+  }
+
+  return res.json();
+}
+
 export default {
   getProductos,
   registrar,
@@ -195,5 +236,8 @@ export default {
   solicitarArrepentimiento,
   getDatosPersonales,
   solicitarBaja,
+  crearProducto,
+  subirImagenProducto,
 };
+
 

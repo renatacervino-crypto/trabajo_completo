@@ -41,6 +41,7 @@ class ProductoCreate(BaseModel):
     cuotas_valor: Optional[float] = 0.0
     garantia_meses: Optional[int] = 0
     stock: int = 0
+    imagen_url: Optional[str] = None
 
 class ProductoOut(ProductoCreate):
     id: int

@@ -1,0 +1,1 @@
+Este es un archivo de texto de prueba para validar que el sistema rechaza tipos de archivo que no sean imagenes.
