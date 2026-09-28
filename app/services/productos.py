@@ -32,3 +32,6 @@ def listar_productos(
         query = query.filter(models.Producto.precio_final <= precio_max)
         
     return query.offset(skip).limit(limit).all()
+
+def obtener_producto(db: Session, producto_id: int) -> Optional[models.Producto]:
+    return db.query(models.Producto).filter(models.Producto.id == producto_id).first()
