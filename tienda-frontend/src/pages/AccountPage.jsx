@@ -94,23 +94,34 @@ export default function AccountPage({ onContinueShopping }) {
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               <h3 className="text-xs uppercase tracking-widest font-semibold text-stone-800">
-                Privacidad & Seguridad (Ley 25.326)
+                Tus Derechos Legales (Ley 24.240 & Ley 25.326)
               </h3>
             </div>
             <p className="text-xs text-stone-600 font-light leading-relaxed mb-4">
-              En cumplimiento con la <strong>Ley 25.326 de Protección de Datos Personales</strong>, tus datos personales y hábitos de compra están cifrados y resguardados mediante autenticación JWT en el backend de DSI2.
+              Tenés derecho a revocar cualquier compra dentro de los 10 días corridos sin costo (<strong>Disposición 954/2025</strong>),
+              acceder en todo momento a tus datos guardados o solicitar la baja de tu cuenta por este mismo medio.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-xs border-t border-stone-100 pt-3">
-            <div>
-              <span className="text-stone-400 block text-[11px]">Dirección de Envío:</span>
-              <span className="text-stone-800 font-medium">Av. Alvear 1890, CABA</span>
-            </div>
-            <div>
-              <span className="text-stone-400 block text-[11px]">Método de Pago:</span>
-              <span className="text-stone-800 font-medium">Tarjeta Visa Black ···· 4242</span>
-            </div>
+          <div className="flex flex-wrap gap-2 border-t border-stone-100 pt-3">
+            <button
+              onClick={() => navigate('/arrepentimiento')}
+              className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 font-medium px-3 py-1.5 rounded transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <span>↩️</span> Botón de Arrepentimiento
+            </button>
+            <button
+              onClick={() => navigate('/mis-datos')}
+              className="text-xs bg-stone-100 hover:bg-stone-200 text-stone-800 font-medium px-3 py-1.5 rounded transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <span>🛡️</span> Ver Mis Datos Guardados
+            </button>
+            <button
+              onClick={() => navigate('/baja')}
+              className="text-xs bg-red-50 hover:bg-red-100 text-red-700 font-medium px-3 py-1.5 rounded transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <span>🚫</span> Darse de Baja
+            </button>
           </div>
         </div>
       </div>
@@ -205,6 +216,25 @@ export default function AccountPage({ onContinueShopping }) {
                       </span>
                     </div>
                   ))}
+                </div>
+
+                {/* Acciones de Consumidor para este pedido */}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-stone-400">
+                    Plazo legal de revocación: 10 días corridos (Art. 34 Ley 24.240)
+                  </span>
+                  {pedido.estado === 'revocado' ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded">
+                      <span>↩️</span> Revocado por Arrepentimiento (Disp. 954/2025)
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => navigate('/arrepentimiento')}
+                      className="text-[11px] text-amber-800 hover:text-amber-900 font-medium hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>↩️</span> Revocar esta compra
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

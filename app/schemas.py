@@ -102,3 +102,40 @@ class PedidoResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+# --- Schemas de Derechos del Consumidor (Clase 9: Disp. 954/2025, Ley 24.240 y Ley 25.326) ---
+class ArrepentimientoRequest(BaseModel):
+    pedido_id: int
+    motivo: Optional[str] = None
+
+class ArrepentimientoResponse(BaseModel):
+    codigo_tramite: str
+    pedido_id: int
+    estado: str
+    mensaje: str
+    fecha: str
+
+class BajaRequest(BaseModel):
+    motivo: Optional[str] = None
+
+class BajaResponse(BaseModel):
+    codigo_tramite: str
+    estado: str
+    mensaje: str
+    fecha: str
+
+class TitularDatosResponse(BaseModel):
+    id: int
+    nombre: str
+    email: str
+    rol: str
+    consentimiento_ley_25326: bool
+
+class DatosPersonalesResponse(BaseModel):
+    titular: TitularDatosResponse
+    finalidad_tratamiento: str
+    seguridad: str
+    cantidad_pedidos_registrados: int
+    organo_de_control: str
+
+

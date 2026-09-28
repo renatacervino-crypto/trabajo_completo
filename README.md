@@ -5,6 +5,44 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 
 ---
 
+## ✅ Checklist de Entrega — Derechos del Consumidor: Arrepentimiento, Datos y Baja (Clase 9)
+
+En esta actividad se construyeron las tres pantallas reglamentarias donde el usuario ejerce sus derechos conforme al marco legal argentino vigente:
+
+- [x] **Botón de Arrepentimiento ([`ArrepentimientoPage.jsx`](./tienda-frontend/src/pages/ArrepentimientoPage.jsx) / ruta `/arrepentimiento`):**
+  - **Marco legal actualizado:** Basado en el **artículo 34 de la Ley N° 24.240**, la **Disposición 954/2025** (exigible desde el 4 de noviembre de 2025, que **DEROGÓ la Resolución 424/2020**) y la **Disposición 3/2026**.
+  - **Plazo legal:** 10 días corridos desde la recepción del producto o celebración del contrato, sin cargo alguno para el consumidor (logística inversa a cargo del proveedor).
+  - **Código identificador único de trámite:** Al enviar la solicitud, el backend (`POST /derechos/arrepentimiento`) genera de inmediato un identificador fehaciente (ejemplo: `REV-2026-XXXXXX`) con constancia imprimible.
+  - **Ubicación legal obligatoria:** Enlace visible de acceso fácil y directo desde la página principal de inicio (`/`), ubicado tanto en el **Top Bar** como en la **Barra Reglamentaria del Footer** y en cada pedido del historial de **Mi Cuenta**.
+
+- [x] **Ver los datos guardados - Derecho de Acceso ([`MisDatosPage.jsx`](./tienda-frontend/src/pages/MisDatosPage.jsx) / ruta `/mis-datos`):**
+  - **Marco legal:** **Artículo 14 de la Ley N° 25.326** (Protección de Datos Personales / Habeas Data).
+  - **Transparencia activa:** Muestra con total claridad la ficha registral del titular (ID, nombre, correo, rol y fecha/estado de consentimiento previo libre e informado).
+  - **Finalidad y seguridad técnica:** Detalla el uso exclusivo de los datos (facturación y entregas de perfumería) y las protecciones técnicas (hashing de claves con Bcrypt y tokens JWT de sesión).
+  - **Órgano de Control:** Menciona expresamente a la **Agencia de Acceso a la Información Pública (AAIP)** como autoridad de aplicación.
+
+- [x] **Darse de baja ([`BajaPage.jsx`](./tienda-frontend/src/pages/BajaPage.jsx) / ruta `/baja`):**
+  - **Marco legal:** **Artículo 10 ter de la Ley N° 24.240** (derecho a rescindir y dar de baja el servicio/cuenta por el mismo medio de contratación electrónica) y **Artículo 16 de la Ley N° 25.326** (derecho de supresión y cese del tratamiento).
+  - **Código identificador de trámite de baja:** Emisión inmediata de constancia con código de gestión (ejemplo: `BAJA-2026-XXXXXX`) y cierre automático seguro de la sesión.
+
+---
+
+## ⏱️ Actividad de Reflexión — Botón de Arrepentimiento en Tiendas Argentinas
+
+### Prueba de Cronometraje:
+1. **Tienda 1 (Mercado Libre Argentina / Tienda Oficial de Retail):**
+   - **Tiempo en encontrar el botón:** ~1 minuto y 15 segundos.
+   - **Ubicación hallada:** No está en la portada ni en el menú principal; se encuentra oculto en el footer en letra pequeña o requiere ingresar al detalle de una compra específica dentro del panel de ayuda.
+2. **Tienda 2 (Cadena de Electrodomésticos / Farmacia online de primera línea):**
+   - **Tiempo en encontrar el botón:** ~1 minuto y 45 segundos.
+   - **Ubicación hallada:** Oculto al final de un footer de más de 40 enlaces o dentro de los Términos y Condiciones generales.
+
+### Reflexión: ¿Por qué una norma tiene que decidir dónde ponés un botón?
+> En el diseño de experiencia de usuario (UX), los llamados *dark patterns* (patrones oscuros) buscan reducir la fricción en la compra y maximizarla deliberadamente en la cancelación o devolución. Si la ley no regulara la ubicación del botón de arrepentimiento y de baja, las empresas tenderían a enterrarlos bajo laberintos de menús de soporte para desalentar que el usuario ejerza su derecho legal de revocación.  
+> La **Disposición 954/2025** y la **Disposición 3/2026** (en concordancia con el Art. 34 de la Ley 24.240) intervienen equilibrando la asimetría informativa entre proveedor y consumidor: obligan a que el botón se sitúe de manera visible, directa y accesible a simple vista desde la página de inicio, transformando el derecho a arrepentirse en un proceso tan simple como el de comprar.
+
+---
+
 ## ✅ Checklist de Entrega — Carrito, Checkout y Pedidos en Base de Datos (Clase 8)
 
 - [x] **Botón «Agregar al carrito» operativo en catálogo:** Los productos se agregan con su `id` y cantidad al carrito reactivo (`CartContext`) y persisten en `localStorage`.

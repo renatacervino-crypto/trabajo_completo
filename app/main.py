@@ -9,6 +9,7 @@ from app.core.security import hash_password
 from app.routers import productos as productos_router
 from app.routers import auth as auth_router
 from app.routers import pedidos as pedidos_router
+from app.routers import derechos as derechos_router
 
 # Inicialización y semillero de datos
 @asynccontextmanager
@@ -81,6 +82,7 @@ app.add_middleware(
 app.include_router(auth_router.router)
 app.include_router(productos_router.router)
 app.include_router(pedidos_router.router)
+app.include_router(derechos_router.router)
 
 @app.get("/", tags=["Health"])
 def root():

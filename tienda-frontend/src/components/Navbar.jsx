@@ -16,9 +16,24 @@ export default function Navbar() {
 
   return (
     <header className="bg-white border-b border-stone-200 sticky top-0 z-40 shadow-xs">
-      {/* Top Bar Banner */}
-      <div className="bg-stone-900 text-stone-300 py-1.5 px-4 text-center text-[11px] tracking-widest uppercase font-light">
-        Maison L'Élixir · Haute Parfumerie · Autenticación JWT y Ley 25.326
+      {/* Top Bar Banner con Enlace Reglamentario Directo */}
+      <div className="bg-stone-900 text-stone-300 py-1.5 px-4 text-center text-[11px] tracking-wider uppercase font-light flex items-center justify-between max-w-6xl mx-auto">
+        <span className="hidden sm:inline">Maison L'Élixir · Haute Parfumerie</span>
+        <div className="flex items-center gap-3 mx-auto sm:mx-0">
+          <Link
+            to="/arrepentimiento"
+            className="text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 flex items-center gap-1"
+          >
+            <span>↩️</span> Botón de Arrepentimiento (Disp. 954/2025)
+          </Link>
+          <span className="text-stone-600">|</span>
+          <Link
+            to="/mis-datos"
+            className="text-stone-400 hover:text-stone-200"
+          >
+            Ley 25.326
+          </Link>
+        </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
