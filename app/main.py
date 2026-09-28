@@ -46,13 +46,13 @@ async def lifespan(app: FastAPI):
         # 2. Semillero de Productos (si no hay)
         if db.query(models.Producto).count() == 0:
             productos_iniciales = [
-                models.Producto(nombre="Santal Impérial 50ml", precio_final=260000.0, cuotas_cantidad=6, cuotas_valor=43333.33, garantia_meses=12, stock=15),
-                models.Producto(nombre="Rose Noire Absolue 50ml", precio_final=285000.0, cuotas_cantidad=6, cuotas_valor=47500.0, garantia_meses=12, stock=8),
-                models.Producto(nombre="Iris Nocturne 50ml", precio_final=320000.0, cuotas_cantidad=6, cuotas_valor=53333.33, garantia_meses=12, stock=5),
-                models.Producto(nombre="Cuir Majestueux 50ml", precio_final=310000.0, cuotas_cantidad=6, cuotas_valor=51666.67, garantia_meses=12, stock=10),
-                models.Producto(nombre="Ambre Précieux 50ml", precio_final=240000.0, cuotas_cantidad=6, cuotas_valor=40000.0, garantia_meses=12, stock=12),
-                models.Producto(nombre="Fleur de Soie 50ml", precio_final=275000.0, cuotas_cantidad=6, cuotas_valor=45833.33, garantia_meses=12, stock=7),
-                models.Producto(nombre="Oud Mystique 50ml", precio_final=350000.0, cuotas_cantidad=6, cuotas_valor=58333.33, garantia_meses=12, stock=4),
+                models.Producto(nombre="Santal Impérial 50ml", precio_final=260000.0, cuotas_cantidad=6, cuotas_valor=43333.33, garantia_meses=12, stock=15, imagen_url="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80"),
+                models.Producto(nombre="Rose Noire Absolue 50ml", precio_final=285000.0, cuotas_cantidad=6, cuotas_valor=47500.0, garantia_meses=12, stock=8, imagen_url="https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&w=600&q=80"),
+                models.Producto(nombre="Iris Nocturne 50ml", precio_final=320000.0, cuotas_cantidad=6, cuotas_valor=53333.33, garantia_meses=12, stock=5, imagen_url="https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=600&q=80"),
+                models.Producto(nombre="Cuir Majestueux 50ml", precio_final=310000.0, cuotas_cantidad=6, cuotas_valor=51666.67, garantia_meses=12, stock=10, imagen_url="https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=600&q=80"),
+                models.Producto(nombre="Ambre Précieux 50ml", precio_final=240000.0, cuotas_cantidad=6, cuotas_valor=40000.0, garantia_meses=12, stock=12, imagen_url="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80"),
+                models.Producto(nombre="Fleur de Soie 50ml", precio_final=275000.0, cuotas_cantidad=6, cuotas_valor=45833.33, garantia_meses=12, stock=7, imagen_url="https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&w=600&q=80"),
+                models.Producto(nombre="Oud Mystique 50ml", precio_final=350000.0, cuotas_cantidad=6, cuotas_valor=58333.33, garantia_meses=12, stock=4, imagen_url="https://images.unsplash.com/photo-1592945403407-98e3b2e59751?auto=format&fit=crop&w=600&q=80"),
             ]
             db.add_all(productos_iniciales)
 
