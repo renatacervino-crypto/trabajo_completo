@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import RutaProtegida from './components/RutaProtegida';
 import CatalogPage from './pages/CatalogPage';
 import ProductDetailPage from './pages/ProductDetailPage';
@@ -11,6 +12,9 @@ import AccountPage from './pages/AccountPage';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import PanelAdmin from './pages/PanelAdmin';
+import ArrepentimientoPage from './pages/ArrepentimientoPage';
+import MisDatosPage from './pages/MisDatosPage';
+import BajaPage from './pages/BajaPage';
 
 function StoreRoutes() {
   const navigate = useNavigate();
@@ -32,6 +36,11 @@ function StoreRoutes() {
           <Route path="/" element={<CatalogPage onSelectProduct={handleSelectProduct} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
+          
+          {/* Pantallas de Derechos del Consumidor (Disposición 954/2025, Ley 24.240 y Ley 25.326) */}
+          <Route path="/arrepentimiento" element={<ArrepentimientoPage />} />
+          <Route path="/mis-datos" element={<MisDatosPage />} />
+          <Route path="/baja" element={<BajaPage />} />
           
           <Route
             path="/producto"
@@ -72,22 +81,8 @@ function StoreRoutes() {
         </Routes>
       </main>
 
-      {/* Editorial Footer */}
-      <footer className="bg-stone-900 text-stone-400 py-10 border-t border-stone-800 text-xs">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-center sm:text-left">
-            <span className="font-serif tracking-widest text-stone-200 font-semibold uppercase">
-              L'Élixir · Paris
-            </span>
-            <p className="text-[11px] text-stone-500 mt-0.5">
-              Aplicaciones Informáticas & DSI2 · Proyecto Integrador 2026 · Ley 25.326
-            </p>
-          </div>
-          <div className="text-[11px] text-stone-500 text-center sm:text-right">
-            <span>Autenticación OAuth2 + JWT · Contraseñas Hasheadas con Bcrypt</span>
-          </div>
-        </div>
-      </footer>
+      {/* Footer reglamentario con Botón de Arrepentimiento, Baja y Protección de Datos */}
+      <Footer />
     </div>
   );
 }

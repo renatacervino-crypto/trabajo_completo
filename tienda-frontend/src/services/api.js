@@ -70,10 +70,130 @@ export async function getProductos({ page = 0, limit = 4, nombre = '' } = {}) {
   return await respuesta.json();
 }
 
+export async function crearPedido(items) {
+  // LA REGLA QUE NO SE NEGOCIA:
+  // Al backend le mandás producto_id y cantidad, nada más.
+  // El precio está en pantalla para dibujar el carrito, pero no viaja:
+  // el total lo calcula el servidor con los precios de su propia base de datos.
+  const payload = {
+    items: items.map((item) => ({
+      producto_id: Number(item.id),
+      cantidad: Number(item.cantidad || 1),
+    })),
+  };
+
+  const res = await fetch(`${API_URL}/pedidos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (res.status === 401) {
+    throw new Error('Debes iniciar sesión para confirmar tu compra.');
+  }
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'No se pudo confirmar el pedido');
+  }
+
+  return res.json();
+}
+
+export async function getMisPedidos() {
+  const res = await fetch(`${API_URL}/pedidos/mis-pedidos`, {
+    headers: authHeaders(),
+  });
+
+  if (res.status === 401) {
+    throw new Error('Sesión no autorizada o expirada');
+  }
+
+  if (!res.ok) {
+    throw new Error('No se pudo obtener el historial de pedidos');
+  }
+
+  return res.json();
+}
+
+export async function solicitarArrepentimiento({ pedidoId, motivo = '' }) {
+  const res = await fetch(`${API_URL}/derechos/arrepentimiento`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify({
+      pedido_id: Number(pedidoId),
+      motivo: motivo || undefined,
+    }),
+  });
+
+  if (res.status === 401) {
+    throw new Error('Debes iniciar sesión para solicitar la revocación.');
+  }
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'No se pudo procesar la solicitud de arrepentimiento');
+  }
+
+  return res.json();
+}
+
+export async function getDatosPersonales() {
+  const res = await fetch(`${API_URL}/derechos/mis-datos`, {
+    headers: authHeaders(),
+  });
+
+  if (res.status === 401) {
+    throw new Error('Debes iniciar sesión para consultar tus datos registrados.');
+  }
+
+  if (!res.ok) {
+    throw new Error('No se pudo acceder al registro de datos personales.');
+  }
+
+  return res.json();
+}
+
+export async function solicitarBaja({ motivo = '' } = {}) {
+  const res = await fetch(`${API_URL}/derechos/baja`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify({
+      motivo: motivo || undefined,
+    }),
+  });
+
+  if (res.status === 401) {
+    throw new Error('Debes iniciar sesión para tramitar la baja de tu cuenta.');
+  }
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'No se pudo tramitar la baja.');
+  }
+
+  return res.json();
+}
+
 export default {
   getProductos,
   registrar,
   login,
   getMe,
   authHeaders,
+  crearPedido,
+  getMisPedidos,
+  solicitarArrepentimiento,
+  getDatosPersonales,
+  solicitarBaja,
 };
+

@@ -1,4 +1,5 @@
 export default function ProductCard({
+  id,
   nombre = "Santal Impérial Extrait",
   precio_final = 185000,
   cuotas_cantidad = 6,
@@ -16,6 +17,7 @@ export default function ProductCard({
   };
 
   const productData = {
+    id,
     nombre,
     precio_final,
     cuotas_cantidad,
@@ -23,6 +25,7 @@ export default function ProductCard({
     garantia_meses,
     imagen,
   };
+
 
   return (
     <div className="rounded-lg shadow p-4 bg-white border border-stone-200 flex flex-col justify-between hover:shadow-lg transition-all duration-300 group">

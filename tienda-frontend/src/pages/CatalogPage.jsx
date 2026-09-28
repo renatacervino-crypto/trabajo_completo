@@ -175,6 +175,7 @@ export default function CatalogPage({ onSelectProduct }) {
                 return (
                   <ProductCard
                     key={prod.id || prod.nombre}
+                    id={prod.id}
                     nombre={prod.nombre}
                     precio_final={precioFinal}
                     cuotas_cantidad={cuotasCantidad}
