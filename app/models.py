@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -9,7 +9,8 @@ class Usuario(Base):
     nombre = Column(String(100), nullable=False)
     email = Column(String(150), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    rol = Column(String(50), default="cliente", nullable=False)
+    rol = Column(String(50), default="customer", nullable=False)
+    acepto_tratamiento = Column(Boolean, default=False, nullable=False)
 
     # Relación 1 a N: Un usuario tiene múltiples pedidos
     pedidos = relationship("Pedido", back_populates="usuario")

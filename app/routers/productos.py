@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app import schemas
+from app import schemas, models
 from app.services import productos as productos_service
+from app.routers.auth import require_admin
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
 
@@ -31,6 +32,8 @@ def listar_productos(
 @router.post("/", response_model=schemas.ProductoOut, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def crear_producto(
     producto: schemas.ProductoCreate,
+    admin: models.Usuario = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     return productos_service.crear_producto(db=db, producto=producto)
+

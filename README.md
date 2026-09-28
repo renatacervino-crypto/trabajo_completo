@@ -5,6 +5,19 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 
 ---
 
+## ✅ Checklist de Entrega — Registro, Login y Rutas Protegidas (Clase 7)
+
+- [x] **Formulario controlado de Registro:** Implementado en [`tienda-frontend/src/pages/Registro.jsx`](./tienda-frontend/src/pages/Registro.jsx) con `useState` para `nombre`, `email`, `password` y `acepto_tratamiento`.
+- [x] **Consentimiento válido (Ley 25.326):** Checkbox que comienza desmarcado, describe qué datos se guardan y para qué, y deshabilita el botón de envío hasta ser aceptado.
+- [x] **Formulario controlado de Login:** Implementado en [`tienda-frontend/src/pages/Login.jsx`](./tienda-frontend/src/pages/Login.jsx) enviando `form-urlencoded` con `username` y `password` a `/auth/login`.
+- [x] **Seguridad y contraseñas hasheadas con Bcrypt:** La regla que no se negocia: ninguna contraseña se almacena en texto plano en la base de datos ([`app/core/security.py`](./app/core/security.py) y [`app/services/auth.py`](./app/services/auth.py)).
+- [x] **Tokens JWT y endpoints de autenticación en FastAPI:** Endpoints `/auth/register`, `/auth/login`, `/auth/refresh` y `/auth/me` con tokens bearer de 30 minutos ([`app/routers/auth.py`](./app/routers/auth.py)).
+- [x] **Centralización en `services/api.js`:** Métodos `registrar()`, `login()`, `getMe()` y `authHeaders()` con cabecera `Authorization: Bearer <token>`.
+- [x] **`AuthContext` y persistencia en `localStorage`:** Sesión global en [`tienda-frontend/src/context/AuthContext.jsx`](./tienda-frontend/src/context/AuthContext.jsx), sobreviviendo a la recarga y verificando `/auth/me` con estado `cargando`.
+- [x] **Componente `RutaProtegida`:** En [`tienda-frontend/src/components/RutaProtegida.jsx`](./tienda-frontend/src/components/RutaProtegida.jsx) protegiendo `/mi-cuenta` por sesión y `/admin` por rol (`rol="admin"`). Si un usuario `customer` intenta ingresar a `/admin`, se redirige al catálogo.
+
+---
+
 ## ✅ Checklist de Entrega — Variables de Entorno y CORS (Clase 6)
 
 - [x] **URL de la API configurada en `.env`:** Variable `VITE_API_URL=http://localhost:8000` en [`tienda-frontend/.env`](./tienda-frontend/.env).

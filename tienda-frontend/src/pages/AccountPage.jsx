@@ -1,4 +1,24 @@
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
 export default function AccountPage({ onContinueShopping }) {
+  const { usuario, cerrarSesion } = useAuth();
+  const navigate = useNavigate();
+
+  const handleCerrarSesion = () => {
+    cerrarSesion();
+    navigate('/');
+  };
+
+  const iniciales = usuario?.nombre
+    ? usuario.nombre
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : 'US';
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
@@ -9,24 +29,32 @@ export default function AccountPage({ onContinueShopping }) {
             Maison L'Élixir · Perfil de Cliente Exclusivo
           </p>
         </div>
-        <button
-          onClick={onContinueShopping}
-          className="text-xs uppercase tracking-widest font-semibold text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
-        >
-          ← Volver a la Tienda
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => onContinueShopping ? onContinueShopping() : navigate('/')}
+            className="text-xs uppercase tracking-widest font-semibold text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
+          >
+            ← Volver a la Tienda
+          </button>
+          <button
+            onClick={handleCerrarSesion}
+            className="text-xs uppercase tracking-widest font-semibold text-red-700 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded transition-colors cursor-pointer"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Profile Card */}
         <div className="bg-white border border-stone-200 rounded-lg p-6 shadow-sm flex flex-col items-center text-center">
           <div className="w-20 h-20 rounded-full bg-stone-100 border-2 border-amber-700 flex items-center justify-center text-stone-700 font-serif text-2xl mb-3">
-            RC
+            {iniciales}
           </div>
-          <h2 className="text-lg font-serif font-medium text-stone-900">Renata Cervino</h2>
-          <p className="text-xs text-stone-500">renatacervino@iresm.edu.ar</p>
+          <h2 className="text-lg font-serif font-medium text-stone-900">{usuario?.nombre || 'Usuario'}</h2>
+          <p className="text-xs text-stone-500">{usuario?.email || 'sin email'}</p>
           <span className="mt-3 text-[10px] uppercase tracking-widest font-semibold px-2.5 py-1 bg-amber-50 text-amber-800 rounded-full border border-amber-200">
-            Cliente VIP · DSI2
+            Rol: {usuario?.rol || 'customer'}
           </span>
         </div>
 

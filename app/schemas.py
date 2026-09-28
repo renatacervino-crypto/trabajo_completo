@@ -1,20 +1,36 @@
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 
-# --- Schemas de Usuario ---
+# --- Schemas de Usuario y Autenticación ---
 class UsuarioBase(BaseModel):
     nombre: str
     email: str
-    rol: str = "cliente"
+    rol: str = "customer"
 
 class UsuarioCreate(UsuarioBase):
     password: str
+
+class UsuarioRegister(BaseModel):
+    nombre: str
+    email: str
+    password: str
+    acepto_tratamiento: bool
 
 class UsuarioResponse(UsuarioBase):
     id: int
 
     class Config:
         from_attributes = True
+
+UsuarioOut = UsuarioResponse
+
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+class TokenRefreshRequest(BaseModel):
+    refresh_token: str
 
 
 # --- Schemas de Producto ---
