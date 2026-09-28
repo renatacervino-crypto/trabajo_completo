@@ -1,20 +1,22 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-import random
-import string
+import secrets
 from datetime import datetime, timezone
 from app import models
 
-def generar_codigo(prefijo: str) -> str:
-    sufijo = ''.join(random.choices(string.digits, k=6))
-    anio = datetime.now().year
-    return f"{prefijo}-{anio}-{sufijo}"
+def generar_codigo() -> str:
+    """
+    El código que la norma obliga a entregarle al consumidor (Parte 1 consigna):
+    Devuelve un código legible y único como: ARR-20260928-A3F9C1
+    """
+    fecha = datetime.now(timezone.utc).strftime("%Y%m%d")
+    return f"ARR-{fecha}-{secrets.token_hex(3).upper()}"
 
 def solicitar_arrepentimiento(db: Session, pedido_id: int, usuario_id: int, motivo: str = None) -> dict:
     """
     Ejerce el derecho de revocación / arrepentimiento conforme al art. 34 de la Ley 24.240,
     la Disposición 954/2025 y la Disposición 3/2026.
-    Genera un código identificador único de trámite inmediato.
+    Genera y almacena en la tabla 'solicitudes_revocacion' el registro con código identificador único.
     """
     pedido = db.query(models.Pedido).filter(
         models.Pedido.id == pedido_id,
@@ -33,8 +35,18 @@ def solicitar_arrepentimiento(db: Session, pedido_id: int, usuario_id: int, moti
             detail=f"El pedido #{pedido_id} ya se encuentra revocado."
         )
 
-    codigo_tramite = generar_codigo("REV")
+    codigo_tramite = generar_codigo()
     pedido.estado = "revocado"
+
+    # Persistir modelo SolicitudRevocacion (Parte 1 consigna)
+    ahora = datetime.now(timezone.utc)
+    solicitud = models.SolicitudRevocacion(
+        codigo=codigo_tramite,
+        pedido_id=pedido.id,
+        usuario_id=usuario_id,
+        creada_en=ahora
+    )
+    db.add(solicitud)
     db.commit()
 
     return {
@@ -42,7 +54,7 @@ def solicitar_arrepentimiento(db: Session, pedido_id: int, usuario_id: int, moti
         "pedido_id": pedido.id,
         "estado": "revocado",
         "mensaje": "Solicitud de arrepentimiento registrada exitosamente bajo la Disposición 954/2025 y Art. 34 Ley 24.240. La devolución no tiene costo para el consumidor.",
-        "fecha": datetime.now(timezone.utc).isoformat()
+        "fecha": ahora.isoformat()
     }
 
 def obtener_datos_personales(db: Session, usuario_id: int) -> dict:
@@ -62,6 +74,8 @@ def obtener_datos_personales(db: Session, usuario_id: int) -> dict:
             "nombre": usuario.nombre,
             "email": usuario.email,
             "rol": usuario.rol,
+            "activo": usuario.activo,
+            "fecha_baja": usuario.fecha_baja.isoformat() if usuario.fecha_baja else None,
             "consentimiento_ley_25326": usuario.acepto_tratamiento,
         },
         "finalidad_tratamiento": "Gestión de cuentas, procesamiento de compras de alta perfumería y facturación.",
@@ -73,20 +87,26 @@ def obtener_datos_personales(db: Session, usuario_id: int) -> dict:
 def solicitar_baja_cuenta(db: Session, usuario_id: int, motivo: str = None) -> dict:
     """
     Derecho de Baja (Art. 10 ter Ley 24.240) y Derecho de Supresión (Art. 16 Ley 25.326).
+    Actualiza usuario.activo = False y fecha_baja = datetime.now(timezone.utc).
     """
     usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
     if not usuario:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
 
-    codigo_baja = generar_codigo("BAJA")
-    # Anonimizar o dar de baja
+    fecha = datetime.now(timezone.utc).strftime("%Y%m%d")
+    codigo_baja = f"BAJA-{fecha}-{secrets.token_hex(3).upper()}"
+    ahora = datetime.now(timezone.utc)
+
+    # Actualizar estado del usuario en la base de datos (Parte 1 consigna)
+    usuario.activo = False
+    usuario.fecha_baja = ahora
     usuario.rol = "inactivo"
-    usuario.nombre = f"Usuario Dado de Baja #{usuario.id}"
     db.commit()
 
     return {
         "codigo_tramite": codigo_baja,
         "estado": "cuenta_baja_confirmada",
         "mensaje": "Baja de cuenta y cese de tratamiento procesados exitosamente conforme a la Ley 24.240 y Ley 25.326.",
-        "fecha": datetime.now(timezone.utc).isoformat()
+        "fecha": ahora.isoformat()
     }
+

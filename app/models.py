@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, Numeric
+from datetime import datetime, timezone
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, Numeric, DateTime
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -12,8 +13,13 @@ class Usuario(Base):
     rol = Column(String(50), default="customer", nullable=False)
     acepto_tratamiento = Column(Boolean, default=False, nullable=False)
 
-    # Relación 1 a N: Un usuario tiene múltiples pedidos
+    # Campos de baja (Parte 1 consigna: Ley 24.240 art. 10 ter y Ley 25.326 art. 16)
+    activo = Column(Boolean, default=True, nullable=False)
+    fecha_baja = Column(DateTime, nullable=True)
+
+    # Relaciones
     pedidos = relationship("Pedido", back_populates="usuario")
+    solicitudes_revocacion = relationship("SolicitudRevocacion", back_populates="usuario")
 
 
 class Producto(Base):
@@ -43,6 +49,7 @@ class Pedido(Base):
     # Relaciones
     usuario = relationship("Usuario", back_populates="pedidos")
     items = relationship("ItemPedido", back_populates="pedido", cascade="all, delete-orphan")
+    solicitudes_revocacion = relationship("SolicitudRevocacion", back_populates="pedido")
 
 
 class ItemPedido(Base):
@@ -57,3 +64,25 @@ class ItemPedido(Base):
     # Relaciones
     pedido = relationship("Pedido", back_populates="items")
     producto = relationship("Producto", back_populates="items")
+
+
+class SolicitudRevocacion(Base):
+    """
+    Modelo SolicitudRevocacion (Parte 1 consigna):
+    - codigo (único, formato legal ARR-YYYYMMDD-HEX)
+    - pedido_id
+    - usuario_id
+    - creada_en
+    """
+    __tablename__ = "solicitudes_revocacion"
+
+    id = Column(Integer, primary_key=True, index=True)
+    codigo = Column(String(50), unique=True, index=True, nullable=False)
+    pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    creada_en = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    # Relaciones
+    pedido = relationship("Pedido", back_populates="solicitudes_revocacion")
+    usuario = relationship("Usuario", back_populates="solicitudes_revocacion")
+
