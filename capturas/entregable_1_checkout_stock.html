@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Entregable 1 — Checkout Exitoso y Descuento de Stock</title>
+  <style>
+    body {
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      padding: 30px;
+      margin: 0;
+    }
+    h1 {
+      color: #58a6ff;
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #8b949e;
+      font-size: 14px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 10px 16px;
+      font-weight: bold;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #21262d;
+      color: #79c0ff;
+      border-bottom: 1px solid #30363d;
+    }
+    .card-body {
+      padding: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #30363d;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #1f242c;
+      color: #f0f6fc;
+    }
+    .stock-before {
+      color: #58a6ff;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    .stock-after {
+      color: #3fb950;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    pre {
+      margin: 0;
+      padding: 12px;
+      background: #0d1117;
+      border-radius: 6px;
+      font-family: "Consolas", monospace;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #7ee787;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      background-color: rgba(63, 185, 80, 0.2);
+      color: #3fb950;
+      border: 1px solid #3fb950;
+    }
+  </style>
+</head>
+<body>
+  <h1>Entregable 1 — Checkout Exitoso y Descuento Atómico de Stock</h1>
+  <div class="subtitle">Prueba de compra de 2 unidades de 'Santal Impérial 50ml' mediante POST /pedidos</div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-header">
+        <span>📊 1. Base de Datos — ANTES de la compra</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock Disponible</th></tr>
+          <tr><td>1</td><td>Santal Impérial 50ml</td><td>$260,000.00</td><td class="stock-before">15 unidades</td></tr>
+        </table>
+        <p style="font-size: 12px; color: #8b949e; margin-top: 12px;">Pedidos registrados del usuario: 0</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span>📊 2. Base de Datos — DESPUÉS de la compra</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock Disponible</th></tr>
+          <tr><td>1</td><td>Santal Impérial 50ml</td><td>$260,000.00</td><td class="stock-after">13 unidades (-2)</td></tr>
+        </table>
+        <p style="font-size: 12px; color: #8b949e; margin-top: 12px;">Pedidos registrados del usuario: 1 (ID #1)</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span>🚀 Respuesta de FastAPI /docs — POST /pedidos <span class="badge">201 Created</span></span>
+    </div>
+    <div class="card-body">
+      <pre>{
+  "id": 1,
+  "usuario_id": 2,
+  "estado": "pendiente",
+  "total": 520000.00,
+  "items": [
+    {
+      "id": 1,
+      "producto_id": 1,
+      "cantidad": 2,
+      "precio_unitario": 260000.00
+    }
+  ]
+}</pre>
+    </div>
+  </div>
+</body>
+</html>

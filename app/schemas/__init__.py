@@ -53,57 +53,17 @@ ProductoBase = ProductoCreate
 ProductoResponse = ProductoOut
 
 
-# --- Schemas de ItemPedido ---
-class ItemPedidoInput(BaseModel):
-    """La regla que no se negocia: solo viajan producto_id y cantidad"""
-    producto_id: int
-    cantidad: int
+# --- Schemas de Pedido (importados desde submódulo pedido) ---
+from app.schemas.pedido import ItemIn, PedidoCreate, ItemOut, PedidoOut
 
-class ItemPedidoBase(BaseModel):
-    producto_id: int
-    cantidad: int
-    precio_unitario: float
-
-class ItemPedidoCreate(ItemPedidoBase):
-    pass
-
-class ItemPedidoResponse(BaseModel):
-    id: int
-    producto_id: int
-    cantidad: int
-    precio_unitario: float
-    producto_nombre: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+# Alias de compatibilidad
+ItemPedidoInput = ItemIn
+ItemPedidoResponse = ItemOut
+PedidoCreateInput = PedidoCreate
+PedidoResponse = PedidoOut
 
 
-# --- Schemas de Pedido ---
-class PedidoCreateInput(BaseModel):
-    """Entrada del checkout: el cliente solo envía la lista de ítems sin precio"""
-    items: List[ItemPedidoInput]
-
-class PedidoBase(BaseModel):
-    usuario_id: int
-    estado: str = "pendiente"
-    total: float
-
-class PedidoCreate(BaseModel):
-    usuario_id: int
-    items: List[ItemPedidoCreate]
-
-class PedidoResponse(BaseModel):
-    id: int
-    usuario_id: int
-    estado: str
-    total: float
-    items: List[ItemPedidoResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-# --- Schemas de Derechos del Consumidor (Clase 9: Disp. 954/2025, Ley 24.240 y Ley 25.326) ---
+# --- Schemas de Derechos del Consumidor ---
 class ArrepentimientoRequest(BaseModel):
     pedido_id: int
     motivo: Optional[str] = None
@@ -137,5 +97,3 @@ class DatosPersonalesResponse(BaseModel):
     seguridad: str
     cantidad_pedidos_registrados: int
     organo_de_control: str
-
-
