@@ -1,25 +1,125 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { crearPedido } from '../services/api';
 
 export default function CartPage({ onContinueShopping, onGoToAccount }) {
   const { cart, updateQuantity, removeFromCart, totalAmount, clearCart } = useCart();
+  const { usuario } = useAuth();
+  const navigate = useNavigate();
+
+  // Estados para los tres problemas de escritura en base de datos:
+  // 1. La operación tarda (isSubmitting)
+  // 2. Puede fallar (orderError)
+  // 3. Repetirla no es gratis (deshabilitar botón durante el proceso)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderError, setOrderError] = useState(null);
+  const [orderSuccess, setOrderSuccess] = useState(null);
 
   const formatMoney = (val) => {
     return `$ ${Number(val || 0).toLocaleString('es-AR')}`;
   };
 
+  const handleCheckout = async () => {
+    if (!usuario) {
+      navigate('/login');
+      return;
+    }
+
+    if (cart.length === 0) return;
+
+    setIsSubmitting(true);
+    setOrderError(null);
+
+    try {
+      // LA REGLA QUE NO SE NEGOCIA:
+      // Al backend le mandamos producto_id y cantidad, nada más.
+      // El total lo calcula el servidor basándose en los precios de su propia base de datos.
+      const pedidoCreado = await crearPedido(cart);
+      
+      // Guardar pedido confirmado devuelto por el backend
+      setOrderSuccess(pedidoCreado);
+      
+      // Vaciar el carrito en el frontend
+      clearCart();
+    } catch (err) {
+      setOrderError(err.message || 'Ocurrió un error al procesar el pedido.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-serif text-stone-900">Bolsa de Compras</h1>
         <button
-          onClick={onContinueShopping}
+          onClick={() => (onContinueShopping ? onContinueShopping() : navigate('/'))}
           className="text-xs uppercase tracking-widest font-semibold text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
         >
           ← Continuar Comprando
         </button>
       </div>
 
-      {cart.length === 0 ? (
+      {/* Pantalla de Confirmación de Compra Exitosa */}
+      {orderSuccess && (
+        <div className="bg-white border border-stone-200 rounded-lg p-8 max-w-xl mx-auto text-center shadow-sm my-6">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-3xl">
+            ✓
+          </div>
+          <span className="text-[10px] uppercase tracking-[0.25em] text-amber-700 font-semibold">
+            Compra Confirmada en Base de Datos
+          </span>
+          <h2 className="text-2xl font-serif text-stone-900 mt-1 mb-2">
+            ¡Gracias por tu pedido, {usuario?.nombre?.split(' ')[0]}!
+          </h2>
+          <p className="text-xs text-stone-600 font-light leading-relaxed mb-6">
+            Tu pedido <strong className="font-semibold text-stone-800">#{orderSuccess.id}</strong> ha sido registrado en la base de datos y se encuentra en estado <strong className="font-semibold text-emerald-800 uppercase">{orderSuccess.estado}</strong>.
+          </p>
+
+          <div className="bg-stone-50 border border-stone-200 rounded-md p-4 mb-6 text-left text-xs space-y-2">
+            <div className="flex justify-between">
+              <span className="text-stone-500">N.º de Pedido:</span>
+              <span className="font-mono font-bold text-stone-900">#{orderSuccess.id}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-stone-500">Total calculado por el servidor:</span>
+              <span className="font-serif font-bold text-amber-800 text-sm">
+                {formatMoney(orderSuccess.total)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-stone-500">Ítems procesados:</span>
+              <span className="text-stone-800 font-medium">
+                {orderSuccess.items?.reduce((acc, it) => acc + it.cantidad, 0)} unidades
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/mi-cuenta"
+              className="bg-stone-900 hover:bg-amber-800 text-white text-xs font-semibold tracking-wider uppercase py-3 px-6 rounded transition-colors cursor-pointer text-center"
+            >
+              Ver en Mi Cuenta
+            </Link>
+            <button
+              onClick={() => {
+                setOrderSuccess(null);
+                navigate('/');
+              }}
+              className="border border-stone-300 hover:bg-stone-100 text-stone-800 text-xs font-semibold tracking-wider uppercase py-3 px-6 rounded transition-colors cursor-pointer"
+            >
+              Seguir Comprando
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Carrito Vacío (solo si no hubo compra recién confirmada) */}
+      {!orderSuccess && cart.length === 0 && (
         <div className="text-center py-20 bg-white border border-stone-200 rounded-lg p-8 max-w-md mx-auto shadow-sm">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 text-2xl">
             🛍️
@@ -31,16 +131,29 @@ export default function CartPage({ onContinueShopping, onGoToAccount }) {
             Explora nuestra colección de alta perfumería y selecciona tus esencias predilectas.
           </p>
           <button
-            onClick={onContinueShopping}
+            onClick={() => (onContinueShopping ? onContinueShopping() : navigate('/'))}
             className="bg-stone-900 hover:bg-amber-800 text-white text-xs font-semibold tracking-wider uppercase py-3 px-6 rounded transition-colors cursor-pointer"
           >
             Explorar Catálogo
           </button>
         </div>
-      ) : (
+      )}
+
+      {/* Listado y Resumen del Carrito */}
+      {!orderSuccess && cart.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Products List (8 cols) */}
           <div className="lg:col-span-8 space-y-4">
+            {orderError && (
+              <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2 shadow-xs">
+                <span className="font-bold">✕</span>
+                <div className="flex-1">
+                  <p className="font-semibold">Error al procesar la compra</p>
+                  <p className="mt-0.5">{orderError}</p>
+                </div>
+              </div>
+            )}
+
             {cart.map((item) => {
               const unitPrice = item.precio_final || item.precio || 0;
               const subtotal = unitPrice * (item.cantidad || 1);
@@ -65,12 +178,13 @@ export default function CartPage({ onContinueShopping, onGoToAccount }) {
                           {item.nombre}
                         </h3>
                         <p className="text-xs text-amber-700 uppercase tracking-widest mt-0.5">
-                          {item.volume || '100ml'} · Extrait de Parfum
+                          {item.volume || '50ml'} · Extrait de Parfum
                         </p>
                       </div>
                       <button
                         onClick={() => removeFromCart(item.id || item.nombre)}
-                        className="text-stone-400 hover:text-red-600 text-xs transition-colors cursor-pointer p-1"
+                        disabled={isSubmitting}
+                        className="text-stone-400 hover:text-red-600 text-xs transition-colors cursor-pointer p-1 disabled:opacity-50"
                         title="Eliminar de la bolsa"
                       >
                         ✕
@@ -82,7 +196,8 @@ export default function CartPage({ onContinueShopping, onGoToAccount }) {
                       <div className="flex items-center border border-stone-300 rounded overflow-hidden">
                         <button
                           onClick={() => updateQuantity(item.id || item.nombre, -1)}
-                          className="px-2.5 py-1 text-stone-600 hover:bg-stone-100 transition-colors text-sm font-bold cursor-pointer"
+                          disabled={isSubmitting}
+                          className="px-2.5 py-1 text-stone-600 hover:bg-stone-100 transition-colors text-sm font-bold cursor-pointer disabled:opacity-50"
                         >
                           -
                         </button>
@@ -91,7 +206,8 @@ export default function CartPage({ onContinueShopping, onGoToAccount }) {
                         </span>
                         <button
                           onClick={() => updateQuantity(item.id || item.nombre, 1)}
-                          className="px-2.5 py-1 text-stone-600 hover:bg-stone-100 transition-colors text-sm font-bold cursor-pointer"
+                          disabled={isSubmitting}
+                          className="px-2.5 py-1 text-stone-600 hover:bg-stone-100 transition-colors text-sm font-bold cursor-pointer disabled:opacity-50"
                         >
                           +
                         </button>
@@ -131,7 +247,7 @@ export default function CartPage({ onContinueShopping, onGoToAccount }) {
 
               <div className="space-y-3 py-4 text-xs text-stone-600 border-b border-stone-200">
                 <div className="flex justify-between">
-                  <span>Subtotal productos</span>
+                  <span>Subtotal productos estimado</span>
                   <span className="font-semibold text-stone-900">{formatMoney(totalAmount)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -154,18 +270,37 @@ export default function CartPage({ onContinueShopping, onGoToAccount }) {
                 <p className="text-[11px] text-emerald-700 font-medium">
                   Hasta 6 cuotas sin interés de {formatMoney(Math.round(totalAmount / 6))}
                 </p>
+                <p className="text-[10px] text-stone-400 mt-1 italic">
+                  * El total final es validado y calculado por el servidor con los precios oficiales de su base de datos.
+                </p>
               </div>
 
+              {/* Botón de Confirmación con prevención de doble clic y estados */}
               <button
-                onClick={() => alert('¡Compra procesada con éxito! Gracias por tu pedido en L\'Élixir.')}
-                className="w-full bg-stone-900 hover:bg-amber-800 text-white font-semibold text-xs tracking-widest uppercase py-4 rounded transition-colors cursor-pointer text-center block mb-3"
+                onClick={handleCheckout}
+                disabled={isSubmitting || cart.length === 0}
+                className={`w-full py-4 rounded font-semibold text-xs tracking-widest uppercase transition-all block mb-3 text-center ${
+                  isSubmitting
+                    ? 'bg-amber-900/60 text-stone-200 cursor-not-allowed flex items-center justify-center gap-2'
+                    : 'bg-stone-900 hover:bg-amber-800 text-white cursor-pointer shadow-sm'
+                }`}
               >
-                Finalizar Compra
+                {isSubmitting ? (
+                  <>
+                    <span className="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></span>
+                    <span>Confirmando pedido...</span>
+                  </>
+                ) : usuario ? (
+                  'Confirmar y Pagar Pedido'
+                ) : (
+                  'Iniciar Sesión para Comprar'
+                )}
               </button>
 
               <button
                 onClick={clearCart}
-                className="w-full text-center text-xs text-stone-400 hover:text-stone-700 transition-colors py-1 cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full text-center text-xs text-stone-400 hover:text-stone-700 transition-colors py-1 cursor-pointer disabled:opacity-50"
               >
                 Vaciar bolsa
               </button>

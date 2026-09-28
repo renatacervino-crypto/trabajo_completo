@@ -5,7 +5,21 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 
 ---
 
+## ✅ Checklist de Entrega — Carrito, Checkout y Pedidos en Base de Datos (Clase 8)
+
+- [x] **Botón «Agregar al carrito» operativo en catálogo:** Los productos se agregan con su `id` y cantidad al carrito reactivo (`CartContext`) y persisten en `localStorage`.
+- [x] **La regla que no se negocia:** El frontend envía únicamente `producto_id` y `cantidad` en el cuerpo del pedido (`POST /pedidos`). El servidor calcula el total a partir de los precios de su propia base de datos.
+- [x] **Manejo de los tres problemas de escritura:**
+  - *La operación tarda:* Spinner visual y estado `isSubmitting` en el botón de confirmación.
+  - *Puede fallar:* Notificación de errores clara si falta stock o hay problemas de red.
+  - *Repetirla no es gratis (Prevenir doble clic):* Botón estrictamente deshabilitado durante el envío para evitar pedidos duplicados.
+- [x] **Endpoint de creación de pedidos en backend:** `POST /pedidos` descuenta stock, valida usuario autenticado mediante token Bearer y almacena `Pedido` e `ItemPedido` en la base de datos relacional.
+- [x] **Historial de pedidos en «Mi Cuenta»:** Endpoint `GET /pedidos/mis-pedidos` consumido desde [`AccountPage.jsx`](./tienda-frontend/src/pages/AccountPage.jsx), listando todas las compras reales del usuario con desglose de ítems y totales oficiales del servidor.
+
+---
+
 ## ✅ Checklist de Entrega — Registro, Login y Rutas Protegidas (Clase 7)
+
 
 - [x] **Formulario controlado de Registro:** Implementado en [`tienda-frontend/src/pages/Registro.jsx`](./tienda-frontend/src/pages/Registro.jsx) con `useState` para `nombre`, `email`, `password` y `acepto_tratamiento`.
 - [x] **Consentimiento válido (Ley 25.326):** Checkbox que comienza desmarcado, describe qué datos se guardan y para qué, y deshabilita el botón de envío hasta ser aceptado.

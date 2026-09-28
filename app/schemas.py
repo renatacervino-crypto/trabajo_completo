@@ -54,6 +54,11 @@ ProductoResponse = ProductoOut
 
 
 # --- Schemas de ItemPedido ---
+class ItemPedidoInput(BaseModel):
+    """La regla que no se negocia: solo viajan producto_id y cantidad"""
+    producto_id: int
+    cantidad: int
+
 class ItemPedidoBase(BaseModel):
     producto_id: int
     cantidad: int
@@ -62,15 +67,22 @@ class ItemPedidoBase(BaseModel):
 class ItemPedidoCreate(ItemPedidoBase):
     pass
 
-class ItemPedidoResponse(ItemPedidoBase):
+class ItemPedidoResponse(BaseModel):
     id: int
-    pedido_id: int
+    producto_id: int
+    cantidad: int
+    precio_unitario: float
+    producto_nombre: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 
 # --- Schemas de Pedido ---
+class PedidoCreateInput(BaseModel):
+    """Entrada del checkout: el cliente solo envía la lista de ítems sin precio"""
+    items: List[ItemPedidoInput]
+
 class PedidoBase(BaseModel):
     usuario_id: int
     estado: str = "pendiente"
@@ -80,9 +92,13 @@ class PedidoCreate(BaseModel):
     usuario_id: int
     items: List[ItemPedidoCreate]
 
-class PedidoResponse(PedidoBase):
+class PedidoResponse(BaseModel):
     id: int
+    usuario_id: int
+    estado: str
+    total: float
     items: List[ItemPedidoResponse] = []
 
     class Config:
         from_attributes = True
+
