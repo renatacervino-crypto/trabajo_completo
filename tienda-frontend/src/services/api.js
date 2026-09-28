@@ -104,7 +104,7 @@ export async function crearPedido(items) {
 }
 
 export async function getMisPedidos() {
-  const res = await fetch(`${API_URL}/pedidos/mis-pedidos`, {
+  const res = await fetch(`${API_URL}/pedidos/mios`, {
     headers: authHeaders(),
   });
 

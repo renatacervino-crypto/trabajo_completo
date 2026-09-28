@@ -5,6 +5,113 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 
 ---
 
+## ✅ Checklist de Entrega — Historial, Permisos y Transaccionalidad de Pedidos (Parte 4)
+
+Repaso completo verificado y validado mediante suite de pruebas automatizadas:
+
+- [x] **Pedido tiene estado y su total está en Numeric, no en Float:** En [`app/models.py`](./app/models.py), `Pedido.total` está definido como `Numeric(12, 2)` para evitar pérdidas de precisión de punto flotante en cálculos monetarios, y `Pedido.estado` como `String(50)` con valor por defecto `"completado"`.
+- [x] **ItemPedido guarda precio_unitario:** En [`app/models.py`](./app/models.py), `ItemPedido.precio_unitario` se almacena como `Numeric(12, 2)`, congelando el precio histórico del producto al momento exacto de la compra.
+- [x] **La migración de Alembic está corrida y las columnas se ven en la base de datos:** Todas las revisiones de Alembic aplicadas exitosamente hasta la última versión (`python -m alembic upgrade head`).
+- [x] **PedidoCreate no acepta precios, ni total, ni usuario_id:** Definido en [`app/schemas/pedido.py`](./app/schemas/pedido.py). Solo recibe `items: List[ItemIn]`, donde cada ítem únicamente contiene `producto_id: int` y `cantidad: int = Field(gt=0)`. El payload no puede manipular precios ni asignar órdenes a otros usuarios.
+- [x] **El total lo calcula el servicio recorriendo los productos de la base:** En [`app/services/pedido_service.py`](./app/services/pedido_service.py), el precio de cada ítem se obtiene consultando el registro del producto en la base de datos y acumulando `item.cantidad * producto.precio`.
+- [x] **El stock baja al comprar:** Por cada ítem comprado, `producto.stock -= item.cantidad` se aplica dentro de la transacción de base de datos.
+- [x] **Si un ítem falla, NINGÚN stock queda descontado (el rollback funciona):** La operación de checkout está encapsulada en un bloque `try / except` con `db.rollback()` ante cualquier error o validación fallida, garantizando la propiedad ACID de atomicidad.
+- [x] **Sin stock devuelve 409 con el nombre del producto y las unidades disponibles:** Si el stock solicitado excede las existencias, se aborta la transacción y se responde con `HTTP 409 CONFLICT` y mensaje: `"Stock insuficiente para '{producto.nombre}'. Quedan {producto.stock} unidades disponibles."`.
+- [x] **Un producto inexistente devuelve 404:** Si se solicita un `producto_id` inexistente, se responde de inmediato con `HTTP 404 NOT FOUND` y detalle `"Producto con ID {item.producto_id} no encontrado"`.
+- [x] **Sin token, el checkout devuelve 401:** Protegido con `Depends(get_current_user)`. Peticiones no autenticadas devuelven `HTTP 401 UNAUTHORIZED`.
+- [x] **GET /pedidos/mios devuelve solo los pedidos propios y está declarado antes que /{pedido_id}:**
+  - Implementado en [`app/routers/pedidos.py`](./app/routers/pedidos.py).
+  - Ordenado del más nuevo al más viejo mediante `.order_by(Pedido.id.desc())`.
+  - La ruta `/mios` está declarada **estrictamente antes** que `/{pedido_id}`.
+- [x] **Un pedido ajeno devuelve 404 (no 403):** Al consultar `GET /pedidos/{pedido_id}` de otro usuario, el sistema devuelve `HTTP 404 NOT FOUND` para prevenir ataques de enumeración de recursos e IDOR.
+
+---
+
+## 🔒 Parte 4 — Respuestas Técnicas y Justificación de Arquitectura
+
+### 1. ¿Por qué `/mios` debe estar declarado ANTES que `/{pedido_id}`?
+> En FastAPI (y Starlette), las rutas se evalúan en estricto orden de registro secuencial:
+> - Si se define primero `GET /pedidos/{pedido_id}` con parámetro de tipo entero (`pedido_id: int`), cuando un cliente envía una petición a `GET /pedidos/mios`, FastAPI interpreta la palabra `"mios"` como el valor de `{pedido_id}`.
+> - Al intentar convertir el string `"mios"` a un `int`, el parser de Pydantic falla y FastAPI responde con un error **`HTTP 422 Unprocessable Entity`** indicando que el valor no es un entero válido.
+> - Al registrar `GET /pedidos/mios` **antes**, FastAPI hace match exacto de la cadena `"mios"` primero y no colisiona con el parámetro dinámico.
+
+### 2. Con dos usuarios distintos, pedí el pedido del otro: ¿Qué código devolvés y por qué elegiste ese y no 403?
+> **Código devuelto: `HTTP 404 Not Found`**  
+> **Justificación de Seguridad (OWASP Top 10 - Prevención de IDOR / Enumeración de Recursos):**  
+> - Si respondiéramos `HTTP 403 Forbidden` (Acceso denegado), le estaríamos confirmando a un usuario o atacante malintencionado que **el pedido con ese ID efectivamente existe en el sistema** y pertenece a otra persona. Esto permitiría realizar ataques de enumeración (fuzzing secuencial de IDs para medir cuántos pedidos existen, patrones de compra, etc.).
+> - Al responder `HTTP 404 Not Found` tanto si el pedido no existe como si pertenece a otro usuario, el sistema no filtra metadatos sobre la existencia o validez de registros ajenos, mitigando vulnerabilidades de **Broken Object Level Authorization (BOLA / IDOR)**.
+
+---
+
+## 📋 Contrato de la API para el Equipo de Aplicaciones Informáticas
+
+### 1. Checkout (Crear Pedido)
+- **Método y URL:** `POST /pedidos`
+- **Headers:** `Authorization: Bearer <token_jwt>`, `Content-Type: application/json`
+- **Request Body (`PedidoCreate`):**
+```json
+{
+  "items": [
+    {
+      "producto_id": 1,
+      "cantidad": 2
+    }
+  ]
+}
+```
+- **Response `201 Created` (`PedidoOut`):**
+```json
+{
+  "id": 14,
+  "usuario_id": 1,
+  "fecha": "2026-09-28T11:45:00",
+  "total": "479800.00",
+  "estado": "completado",
+  "items": [
+    {
+      "id": 20,
+      "producto_id": 1,
+      "cantidad": 2,
+      "precio_unitario": "239900.00"
+    }
+  ]
+}
+```
+
+### 2. Historial de Pedidos del Usuario Autenticado
+- **Método y URL:** `GET /pedidos/mios`
+- **Headers:** `Authorization: Bearer <token_jwt>`
+- **Response `200 OK` (`List[PedidoOut]`):**
+```json
+[
+  {
+    "id": 14,
+    "usuario_id": 1,
+    "fecha": "2026-09-28T11:45:00",
+    "total": "479800.00",
+    "estado": "completado",
+    "items": [
+      {
+        "id": 20,
+        "producto_id": 1,
+        "cantidad": 2,
+        "precio_unitario": "239900.00"
+      }
+    ]
+  }
+]
+```
+
+### 3. Detalle de un Pedido Específico
+- **Método y URL:** `GET /pedidos/{pedido_id}`
+- **Headers:** `Authorization: Bearer <token_jwt>`
+- **Respuestas posibles:**
+  - `200 OK`: Si el usuario del token es el dueño del pedido o posee `rol == "admin"`.
+  - `401 Unauthorized`: Si la petición no incluye token o el token expiró.
+  - `404 Not Found`: Si el pedido no existe o pertenece a otro usuario.
+
+---
+
 ## ✅ Checklist de Entrega — Subida de Imágenes con FormData y Vista Previa (Clase 10)
 
 En esta actividad el catálogo deja de ser solo una lista de texto: el administrador puede seleccionar una imagen, visualizarla antes de subirla en una vista previa interactiva, validarla en tipo/peso y publicarla en la tienda.

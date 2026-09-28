@@ -134,7 +134,7 @@ export default function AccountPage({ onContinueShopping }) {
               Historial de Compras en Base de Datos
             </h3>
             <p className="text-[11px] text-stone-500 font-light">
-              Pedidos reales consultados mediante <code className="bg-stone-100 px-1 py-0.5 rounded text-amber-900">GET /pedidos/mis-pedidos</code>
+              Pedidos reales consultados mediante <code className="bg-stone-100 px-1 py-0.5 rounded text-amber-900">GET /pedidos/mios</code>
             </p>
           </div>
           <button

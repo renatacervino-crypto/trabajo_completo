@@ -58,9 +58,29 @@ def crear_pedido(db: Session, usuario: models.Usuario, datos: PedidoCreate) -> m
         raise
 
 def listar_mis_pedidos(db: Session, usuario_id: int) -> List[models.Pedido]:
+    """Retorna los pedidos del usuario ordenados del más nuevo al más viejo"""
     return (
         db.query(models.Pedido)
         .filter(models.Pedido.usuario_id == usuario_id)
         .order_by(models.Pedido.id.desc())
         .all()
     )
+
+def obtener_pedido(db: Session, usuario: models.Usuario, pedido_id: int) -> models.Pedido:
+    """
+    Obtiene un pedido validando pertenencia o rol admin.
+    Si el pedido pertenece a otro usuario, devuelve 404 (en vez de 403)
+    para evitar enumeración de recursos / IDOR (OWASP).
+    """
+    pedido = db.query(models.Pedido).filter(models.Pedido.id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pedido no encontrado"
+        )
+    if usuario.rol != "admin" and pedido.usuario_id != usuario.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pedido no encontrado"
+        )
+    return pedido
