@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, Numeric
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -37,7 +37,7 @@ class Pedido(Base):
     id = Column(Integer, primary_key=True, index=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     estado = Column(String(50), default="pendiente", nullable=False)
-    total = Column(Float, default=0.0, nullable=False)
+    total = Column(Numeric(12, 2), default=0.0, nullable=False)
 
     # Relaciones
     usuario = relationship("Usuario", back_populates="pedidos")
@@ -51,7 +51,7 @@ class ItemPedido(Base):
     pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=False)
     producto_id = Column(Integer, ForeignKey("productos.id"), nullable=False)
     cantidad = Column(Integer, nullable=False, default=1)
-    precio_unitario = Column(Float, nullable=False)
+    precio_unitario = Column(Numeric(12, 2), nullable=False)
 
     # Relaciones
     pedido = relationship("Pedido", back_populates="items")
