@@ -1,26 +1,27 @@
 # L'Élixir · Haute Parfumerie Paris
 ### Plataforma E-Commerce de Perfumes de Autor y Alta Gama (DSI2)
 
-Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio electrónico editorial inspirada en las históricas casas de fragancias parisinas. Este repositorio contiene tanto el **diseño y prototipo editorial de Google Stitch** como la implementación de la **aplicación frontend en React + Vite con TailwindCSS (`tienda-frontend`)**, conectada con el backend de FastAPI y base de datos PostgreSQL en DSI2.
+Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio electrónico editorial inspirada en las históricas casas de fragancias parisinas. Este repositorio contiene tanto el **diseño y prototipo editorial de Google Stitch / AI Studio** como la implementación de la **aplicación frontend en React + Vite con TailwindCSS (`tienda-frontend`)**, conectada con el backend de FastAPI y base de datos relacional en DSI2.
 
 ---
 
-## ✅ Checklist de Entrega — Clase 3: Carga y Error
+## ✅ Checklist de Entrega — Paginación y Filtros Reales (Clase 4)
 
-- [x] **`api.js` lanza error si la respuesta no es ok:** Verifica `!respuesta.ok` y arroja `throw new Error('Error al consultar el backend')`.
-- [x] **Estado `isLoading` mostrando un mensaje de carga:** Controlado con `useState(true)`, activado antes del fetch y desactivado en `.finally()`.
-- [x] **Estado `error` mostrando un mensaje si algo falla:** Capturado con `.catch()`, almacena el mensaje de error y lo muestra en pantalla evitando pantallas en blanco.
-- [x] **Mensaje para catálogo vacío:** Muestra un aviso informativo cuando la base de datos no contiene productos disponibles.
-- [x] **Probado con el backend apagado:** Se muestra un contenedor con el mensaje de error legible y botón de reintento.
-- [x] **El catálogo se recupera al volver a prender el backend:** Al restablecer el servicio y reintentar, se cargan los productos reales automáticamente.
+- [x] **`api.js` manda `page`, `limit` y `nombre` como query params:** Armados mediante `URLSearchParams` en [`tienda-frontend/src/services/api.js`](./tienda-frontend/src/services/api.js).
+- [x] **Botón «Anterior» deshabilitado en la página 0:** Controlado con `disabled={page === 0}` y estilos visuales de deshabilitación.
+- [x] **Botón «Siguiente» trae la página siguiente:** Incrementa `page` y consulta al backend los siguientes productos.
+- [x] **Buscador filtrando el catálogo en tiempo real:** `<input>` vinculado al estado `busqueda`.
+- [x] **Buscar reinicia la página a 0:** En el `onChange`, se ejecuta `setPage(0)` y luego `setBusqueda(e.target.value)`.
+- [x] **Probado con al menos 5 productos en base de datos:** Base de datos con 7 fragancias de autor, permitiendo paginar fluidamente entre páginas.
 
 ---
 
-## 💡 Pregunta Conceptual (Para Pensar)
+## 🌟 Funcionalidades del Prototipo Completo
 
-> **¿Por qué te parece que no tuviste que cambiar nada en `ProductCard` ni en la lógica del componente, a pesar de que el backend cambió por completo de motor de datos?**
->
-> **Respuesta:** Porque se respetó el contrato de la interfaz (API contract). Gracias a la arquitectura por capas y la centralización de llamadas en `services/api.js`, el frontend desacopla por completo la interfaz de usuario (`ProductCard`) de la tecnología de persistencia del backend (PostgreSQL). `ProductCard` solo requiere recibir sus props (`nombre`, `precio_final`, etc.) sin importar si los datos provienen de una lista en memoria o de una base de datos relacional.
+1. **Catálogo de Productos con Paginación y Búsqueda:** Paginación controlada por el backend (`GET /productos?page=0&limit=4&nombre=...`) y buscador instantáneo.
+2. **Ficha de Producto (Pydantic Model):** Información técnica (`precio_final`, `cuotas_cantidad`, `cuotas_valor`, `garantia_meses`), selector de volumen (50ml/100ml/250ml) y pirámide olfativa.
+3. **Bolsa / Carrito Reactivo:** Cálculo dinámico de totales, cuotas sin interés, muestras de cortesía artesanales y control de cantidades.
+4. **Mi Cuenta:** Perfil de usuario autenticado con historial de órdenes y resguardo bajo la **Ley 25.326 de Protección de Datos Personales**.
 
 ---
 
@@ -28,46 +29,35 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 
 ```
 trabajo_completo/
-├── tienda-frontend/                      # Proyecto React + Vite con TailwindCSS (Consigna DSI2)
+├── tienda-frontend/                      # Aplicación React + Vite + TailwindCSS
 │   ├── src/
 │   │   ├── components/
-│   │   │   └── ProductCard.jsx           # Componente con precio_final, cuotas y garantia_meses
+│   │   │   └── ProductCard.jsx           # Tarjeta con eventos de detalle y agregado a bolsa
 │   │   ├── pages/
-│   │   │   └── CatalogPage.jsx           # Catálogo con isLoading, error, catálogo vacío y grilla
+│   │   │   ├── CatalogPage.jsx           # Paginación (page, busqueda, Anterior/Siguiente)
+│   │   │   ├── ProductDetailPage.jsx     # Ficha de producto con acordes botánicos
+│   │   │   ├── CartPage.jsx              # Carrito con cálculo de totales y cuotas
+│   │   │   └── AccountPage.jsx           # Perfil de usuario y Ley 25.326
 │   │   ├── services/
-│   │   │   └── api.js                    # getProductos() con validación de respuesta.ok
+│   │   │   └── api.js                    # getProductos({ page, limit, nombre }) con URLSearchParams
 │   │   ├── context/
-│   │   │   └── CartContext.jsx           # Contexto para el estado del carrito
-│   │   ├── App.jsx
+│   │   │   └── CartContext.jsx           # Estado global reactivo del carrito
+│   │   ├── App.jsx                       # Barra de navegación entre las 4 pantallas
 │   │   ├── main.jsx
-│   │   └── index.css                     # Configuración de TailwindCSS
-│   ├── .env                              # Variables de entorno
+│   │   └── index.css                     # TailwindCSS
+│   ├── PROTOTIPO_AI_STUDIO.md            # Informe del prototipo y revisión crítica
+│   ├── .env
 │   ├── vite.config.js                    # Proxy /api -> http://127.0.0.1:8000
-│   ├── package.json
-│   └── boceto-catalogo-stitch.png        # Captura de pantalla del boceto de catálogo
-├── cat_logo_fragancias_de_autor/         # Boceto Stitch: Catálogo interactivo de fragancias
-│   ├── code.html
-│   └── screen.png
-├── home_l_lixir_haute_parfumerie/        # Boceto Stitch: Home editorial de la Maison
-│   ├── code.html
-│   └── screen.png
-├── ficha_de_producto_santal_imperial/    # Boceto Stitch: Ficha técnica y acordes olfativos
-│   ├── code.html
-│   └── screen.png
-├── bolsa_y_checkout_l_lixir/             # Boceto Stitch: Bolsa y checkout
-│   ├── code.html
-│   └── screen.png
-├── haute_parfumerie_editorial/           # Sistema de diseño (DESIGN.md)
-│   └── DESIGN.md
-├── index.html                            # Portal de navegación interactivo
-└── stitch_tienda_e_commerce_de_perfumes.zip # Respaldo del proyecto
+│   └── package.json
+├── index.html                            # Portal principal de navegación
+└── package.json                          # Scripts para ejecutar npm run dev desde la raíz
 ```
 
 ---
 
-## 🚀 Cómo Ejecutar el Proyecto
+## 🚀 Cómo Ejecutar el Proyecto Completo
 
-### 1. Iniciar el Backend DSI2 (FastAPI)
+### 1. Iniciar el Backend (FastAPI + Base de Datos)
 ```bash
 uvicorn app.main:app --reload
 ```
@@ -75,11 +65,9 @@ uvicorn app.main:app --reload
 
 ### 2. Iniciar el Frontend (React + Vite)
 ```bash
-cd tienda-frontend
-npm install
 npm run dev
 ```
-*El servidor de desarrollo de Vite levantará en `http://localhost:5173`.*
+*El servidor de desarrollo de Vite levantará en `http://localhost:5173/`.*
 
 ---
 
