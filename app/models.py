@@ -26,6 +26,7 @@ class Producto(Base):
     cuotas_valor = Column(Float, nullable=True, default=0.0)
     garantia_meses = Column(Integer, nullable=True, default=0)
     stock = Column(Integer, nullable=False, default=0)
+    imagen_url = Column(String(500), nullable=True)
 
     # Relación 1 a N: Un producto puede aparecer en múltiples ítems de pedido
     items = relationship("ItemPedido", back_populates="producto")

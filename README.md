@@ -5,6 +5,35 @@ Bienvenido al repositorio oficial de **L'Élixir**, una experiencia de comercio 
 
 ---
 
+## ✅ Checklist de Entrega — Subida de Imágenes con FormData y Vista Previa (Clase 10)
+
+En esta actividad el catálogo deja de ser solo una lista de texto: el administrador puede seleccionar una imagen, visualizarla antes de subirla en una vista previa interactiva, validarla en tipo/peso y publicarla en la tienda.
+
+- [x] **Carpeta de archivos de prueba (`archivos_de_prueba/`):**
+  - Dos imágenes de producto de menos de 2 MB: `perfume_ambar_150kb.jpg` y `perfume_rosas_250kb.png`.
+  - Una imagen grande de más de 2 MB: `imagen_alta_resolucion_3mb.jpg` (2.6 MB) para disparar la validación.
+  - Archivos que no son imagen: `documento_no_imagen.txt` y `especificacion.pdf` para probar el rechazo de tipo MIME.
+- [x] **Vista previa antes de subir:** Implementada en [`tienda-frontend/src/pages/PanelAdmin.jsx`](./tienda-frontend/src/pages/PanelAdmin.jsx) mediante `URL.createObjectURL(file)`. Muestra miniatura, nombre, tipo MIME y peso formateado en KB/MB.
+- [x] **Validaciones estrictas (Frontend y Backend):**
+  - *Validación de tipo:* Solo acepta formatos de imagen válidos (`image/jpeg`, `image/png`, `image/webp`, `image/gif`). Archivos de texto o PDF son rechazados con aviso de error.
+  - *Validación de tamaño:* Límite máximo de **2 MB**. Si el archivo supera los 2 MB, el sistema lo bloquea antes de enviar y el backend responde con error 400.
+- [x] **La regla que más se olvida:**
+  > Cuando mandás un `FormData`, **NO le pongas el `Content-Type` al `fetch`**. El navegador lo arma automáticamente con la cabecera `multipart/form-data; boundary=---------------------------...`. Si se escribe a mano, el backend no puede parsear los límites de los campos y la subida falla silenciosamente.
+  > Implementado de forma limpia en [`tienda-frontend/src/services/api.js`](./tienda-frontend/src/services/api.js) enviando únicamente el token de autorización Bearer en los headers.
+- [x] **Endpoint en FastAPI y almacenamiento estático:** Endpoint `POST /productos/{id}/imagen` que valida peso y MIME, guarda el archivo en el directorio `/uploads/` y actualiza la columna `imagen_url` del producto en la base de datos relacional. Montaje estático mediante `StaticFiles(directory="uploads")` en [`app/main.py`](./app/main.py).
+- [x] **Aparición de la imagen en la tienda:** Las imágenes subidas se renderizan automáticamente en el catálogo ([`CatalogPage.jsx`](./tienda-frontend/src/pages/CatalogPage.jsx)), en las tarjetas ([`ProductCard.jsx`](./tienda-frontend/src/components/ProductCard.jsx)) y en la vista de detalle ([`ProductDetailPage.jsx`](./tienda-frontend/src/pages/ProductDetailPage.jsx)).
+
+---
+
+## ⏱️ Actividad de Reflexión — Subida de Archivos y FormData (Clase 10)
+
+### Pregunta de Reflexión: ¿Por qué no se debe poner 'Content-Type' manualmente al enviar un FormData?
+> Al enviar datos con `FormData`, la petición HTTP utiliza la codificación `multipart/form-data`. Esta codificación requiere obligatoriamente un parámetro llamado **`boundary`** (un separador alfanumérico único generado aleatoriamente por el navegador, por ejemplo: `multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW`).  
+> Este `boundary` es el delimitador que le indica al servidor exactamente dónde empieza y termina cada archivo binario o campo del formulario.  
+> Si el programador define manualmente `'Content-Type': 'multipart/form-data'`, el navegador no incluye el `boundary`. Como consecuencia, el servidor (FastAPI/Starlette) no puede saber dónde están los límites del archivo y la subida se rompe con un error de decodificación ilegible.
+
+---
+
 ## ✅ Checklist de Entrega — Derechos del Consumidor: Arrepentimiento, Datos y Baja (Clase 9)
 
 En esta actividad se construyeron las tres pantallas reglamentarias donde el usuario ejerce sus derechos conforme al marco legal argentino vigente:

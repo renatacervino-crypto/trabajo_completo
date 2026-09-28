@@ -182,9 +182,13 @@ export default function CatalogPage({ onSelectProduct }) {
                     cuotas_valor={cuotasValor}
                     garantia_meses={garantiaMeses}
                     imagen={
-                      prod.imagen ||
-                      prod.image ||
-                      'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80'
+                      prod.imagen_url
+                        ? (prod.imagen_url.startsWith('http')
+                            ? prod.imagen_url
+                            : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${prod.imagen_url}`)
+                        : prod.imagen ||
+                          prod.image ||
+                          'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80'
                     }
                     onSelect={() => onSelectProduct && onSelectProduct(fullProductData)}
                     onAddToCart={() => handleAddToCart(fullProductData)}
