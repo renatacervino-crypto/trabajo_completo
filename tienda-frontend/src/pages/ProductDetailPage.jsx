@@ -30,10 +30,27 @@ export default function ProductDetailPage({ product, onBack, onGoToCart }) {
     return val || '$0';
   };
 
+  // Factores de escala según el volumen
+  const multiplicadores = {
+    '50ml': 1.0,
+    '100ml': 1.6,
+    '250ml': 2.6,
+  };
+
+  const factorVolumen = multiplicadores[selectedVolume] || 1.0;
+  const precioBase = Number(currentProduct.precio_final || currentProduct.precio || 0);
+  const precioCalculado = Math.round(precioBase * factorVolumen);
+  const cuotasCantidad = currentProduct.cuotas_cantidad || 6;
+  const cuotasValorCalculado = Math.round(precioCalculado / cuotasCantidad);
+
   const handleAddToCart = () => {
     addToCart({
       ...currentProduct,
+      nombre: `${currentProduct.nombre} (${selectedVolume})`,
       volume: selectedVolume,
+      precio_final: precioCalculado,
+      precio: precioCalculado,
+      cuotas_valor: cuotasValorCalculado,
     });
     setAddedNotice(true);
     setTimeout(() => setAddedNotice(false), 3000);
@@ -51,7 +68,7 @@ export default function ProductDetailPage({ product, onBack, onGoToCart }) {
         </button>
         {addedNotice && (
           <span className="text-xs font-semibold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full animate-fade-in">
-            ✓ ¡Producto añadido al carrito con éxito!
+            ✓ ¡Producto ({selectedVolume}) añadido al carrito con éxito!
           </span>
         )}
       </div>
@@ -89,18 +106,25 @@ export default function ProductDetailPage({ product, onBack, onGoToCart }) {
               {currentProduct.nombre}
             </h1>
 
-            {/* Price & Installments */}
+            {/* Price & Installments dinámicos según el volumen */}
             <div className="my-4 pb-4 border-b border-stone-200">
-              <div className="text-3xl font-bold text-stone-900">
-                {formatMoney(currentProduct.precio_final || currentProduct.precio)}
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl font-bold text-stone-900 font-serif">
+                  {formatMoney(precioCalculado)}
+                </span>
+                {selectedVolume !== '50ml' && (
+                  <span className="text-xs font-mono text-stone-400 line-through">
+                    {formatMoney(precioBase)} (50ml)
+                  </span>
+                )}
               </div>
               <p className="text-sm font-medium text-emerald-700 mt-1">
-                Hasta {currentProduct.cuotas_cantidad || 6} cuotas sin interés de {formatMoney(currentProduct.cuotas_valor || Math.round((currentProduct.precio_final || currentProduct.precio || 0) / 6))}
+                Hasta {cuotasCantidad} cuotas sin interés de {formatMoney(cuotasValorCalculado)}
               </p>
               <div className="flex items-center gap-4 mt-2 text-xs text-stone-500">
                 <span className="inline-flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  {currentProduct.en_stock ? 'En Stock para entrega inmediata' : 'Bajo pedido'}
+                  {currentProduct.stock > 0 || currentProduct.en_stock ? 'En Stock para entrega inmediata' : 'Bajo pedido'}
                 </span>
                 <span>·</span>
                 <span>Garantía oficial de {currentProduct.garantia_meses || 12} meses</span>
@@ -112,24 +136,38 @@ export default function ProductDetailPage({ product, onBack, onGoToCart }) {
               {currentProduct.descripcion || 'Creación olfativa formulada con esencias botánicas de alta concentración en Grasse y Florencia. Macerada durante 18 meses para una fijación duradera y estela envolvente.'}
             </p>
 
-            {/* Volume Selector */}
+            {/* Volume Selector Dinámico */}
             <div className="mb-6">
-              <label className="block text-xs uppercase tracking-widest font-semibold text-stone-700 mb-2">
-                Volumen del Frasco:
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs uppercase tracking-widest font-semibold text-stone-700">
+                  Volumen del Frasco:
+                </label>
+                <span className="text-xs text-amber-800 font-medium">
+                  {selectedVolume === '50ml' && 'Presentación Estándar'}
+                  {selectedVolume === '100ml' && 'Presentación Clásica (+60%)'}
+                  {selectedVolume === '250ml' && 'Edición Gran Frasco de Colección'}
+                </span>
+              </div>
               <div className="flex gap-3">
-                {['50ml', '100ml', '250ml'].map((vol) => (
+                {[
+                  { vol: '50ml', tag: '50ml' },
+                  { vol: '100ml', tag: '100ml' },
+                  { vol: '250ml', tag: '250ml' },
+                ].map(({ vol, tag }) => (
                   <button
                     key={vol}
                     type="button"
                     onClick={() => setSelectedVolume(vol)}
-                    className={`text-xs px-4 py-2 border rounded font-medium cursor-pointer transition-colors ${
+                    className={`text-xs px-4 py-2.5 border rounded-lg font-medium cursor-pointer transition-all flex flex-col items-center ${
                       selectedVolume === vol
-                        ? 'border-stone-900 bg-stone-900 text-white'
-                        : 'border-stone-300 text-stone-700 hover:border-stone-500'
+                        ? 'border-stone-900 bg-stone-900 text-white shadow-xs'
+                        : 'border-stone-300 text-stone-700 hover:border-stone-500 bg-white'
                     }`}
                   >
-                    {vol}
+                    <span className="font-bold">{tag}</span>
+                    <span className={`text-[10px] ${selectedVolume === vol ? 'text-amber-300' : 'text-stone-400'}`}>
+                      {formatMoney(Math.round(precioBase * (multiplicadores[vol] || 1)))}
+                    </span>
                   </button>
                 ))}
               </div>

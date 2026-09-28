@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { getProductos, subirImagenProducto, crearProducto } from '../services/api';
+import { getProductos, subirImagenProducto, crearProducto, eliminarProducto } from '../services/api';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -11,6 +11,7 @@ export default function PanelAdmin() {
   // Estados de catálogo
   const [productos, setProductos] = useState([]);
   const [isLoadingProductos, setIsLoadingProductos] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(null);
 
   // Estados para Cambiar Imagen a Producto Existente
   const [productoSeleccionado, setProductoSeleccionado] = useState('');
@@ -226,6 +227,34 @@ export default function PanelAdmin() {
     }
   };
 
+  // Eliminar perfume del catálogo
+  const handleEliminarProducto = async (productoId, nombre) => {
+    const confirmar = window.confirm(
+      `¿Estás seguro de que deseas eliminar el perfume "${nombre}" (#${productoId}) del catálogo? Esta acción no se puede deshacer.`
+    );
+    if (!confirmar) return;
+
+    try {
+      setIsDeleting(productoId);
+      setErrorValidacion(null);
+      setMensajeExito(null);
+
+      await eliminarProducto(productoId);
+      setMensajeExito(`✓ El perfume "${nombre}" (#${productoId}) fue eliminado correctamente del catálogo.`);
+
+      // Si el producto eliminado estaba seleccionado en el selector de fotos, resetearlo
+      if (productoSeleccionado === productoId.toString()) {
+        setProductoSeleccionado('');
+      }
+
+      cargarProductos();
+    } catch (err) {
+      setErrorValidacion(err.message || 'Error al eliminar el perfume.');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
   const getFullImageUrl = (url) => {
     if (!url) return null;
     return url.startsWith('http') ? url : `${API_BASE}${url}`;
@@ -317,7 +346,7 @@ export default function PanelAdmin() {
                   step="1000"
                   value={nuevoPrecio}
                   onChange={(e) => setNuevoPrecio(e.target.value)}
-                  placeholder="Ej: 295000"
+                  placeholder="Ej: 350000 o superior (sin límite)"
                   className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono"
                 />
               </div>
@@ -513,6 +542,16 @@ export default function PanelAdmin() {
                   <h4 className="text-xs font-serif font-medium text-stone-900 line-clamp-1">{prod.nombre}</h4>
                   <p className="text-xs font-mono font-bold text-amber-900 mt-0.5">${prod.precio_final?.toLocaleString('es-AR')}</p>
                   <p className="text-[10px] text-stone-500 mt-1">Stock: {prod.stock ?? 0} u. · {prod.cuotas_cantidad} cuotas</p>
+
+                  <button
+                    type="button"
+                    onClick={() => handleEliminarProducto(prod.id, prod.nombre)}
+                    disabled={isDeleting === prod.id}
+                    className="mt-2.5 w-full py-1.5 px-2 bg-red-50 hover:bg-red-100 text-red-700 hover:text-red-900 border border-red-200 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <span>🗑️</span>
+                    <span>{isDeleting === prod.id ? 'Eliminando...' : 'Eliminar Perfume'}</span>
+                  </button>
                 </div>
               </div>
             ))}

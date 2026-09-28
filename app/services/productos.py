@@ -39,3 +39,17 @@ def listar_productos(
 
 def obtener_producto(db: Session, producto_id: int) -> Optional[models.Producto]:
     return db.query(models.Producto).filter(models.Producto.id == producto_id).first()
+
+def eliminar_producto(db: Session, producto_id: int) -> dict:
+    from fastapi import HTTPException, status
+    producto = db.query(models.Producto).filter(models.Producto.id == producto_id).first()
+    if not producto:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Producto #{producto_id} no encontrado"
+        )
+    nombre = producto.nombre
+    db.delete(producto)
+    db.commit()
+    return {"mensaje": f"El perfume '{nombre}' fue eliminado correctamente del catálogo", "id": producto_id}
+

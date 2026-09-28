@@ -225,6 +225,22 @@ export async function subirImagenProducto(productoId, archivo) {
   return res.json();
 }
 
+export async function eliminarProducto(productoId) {
+  const res = await fetch(`${API_URL}/productos/${productoId}`, {
+    method: 'DELETE',
+    headers: {
+      ...authHeaders(),
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'No se pudo eliminar el producto');
+  }
+
+  return res.json();
+}
+
 export default {
   getProductos,
   registrar,
@@ -238,6 +254,8 @@ export default {
   solicitarBaja,
   crearProducto,
   subirImagenProducto,
+  eliminarProducto,
 };
+
 
 

@@ -118,3 +118,15 @@ async def subir_imagen_producto(
 
     return producto
 
+@router.delete("/{producto_id}", status_code=status.HTTP_200_OK)
+def eliminar_producto(
+    producto_id: int,
+    admin: models.Usuario = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Elimina un producto del catálogo (Acceso exclusivo Administrador).
+    """
+    return productos_service.eliminar_producto(db=db, producto_id=producto_id)
+
+
