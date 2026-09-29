@@ -5,8 +5,6 @@ tienda-frontend/dist/
 .DS_Store
 *.log
 __pycache__/
-*.pyc
-*.db
-.env
+# *.db (Permitido para que la base de datos funcione exactamente igual en cualquier computadora)
 venv/
 .venv/

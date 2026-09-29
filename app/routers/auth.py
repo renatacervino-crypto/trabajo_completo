@@ -30,10 +30,19 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     usuario = auth_service.obtener_usuario_por_email(db, email=email)
+    if not usuario and payload.get("id"):
+        usuario = db.query(models.Usuario).filter(models.Usuario.id == payload.get("id")).first()
+
     if not usuario:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario no encontrado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if not usuario.activo:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario dado de baja o inactivo",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return usuario

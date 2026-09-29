@@ -13,7 +13,8 @@ class Usuario(Base):
     rol = Column(String(50), default="customer", nullable=False)
     acepto_tratamiento = Column(Boolean, default=False, nullable=False)
 
-    # Campos de baja (Parte 1 consigna: Ley 24.240 art. 10 ter y Ley 25.326 art. 16)
+    # Campos de consentimiento y baja (Ley 24.240 y Ley 25.326)
+    fecha_consentimiento = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
     fecha_baja = Column(DateTime, nullable=True)
 
@@ -45,6 +46,7 @@ class Pedido(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     estado = Column(String(50), default="pendiente", nullable=False)
     total = Column(Numeric(12, 2), default=0.0, nullable=False)
+    creado_en = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relaciones
     usuario = relationship("Usuario", back_populates="pedidos")

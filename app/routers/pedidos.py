@@ -5,7 +5,7 @@ from typing import List
 from app.database import get_db
 from app import models
 from app.schemas.pedido import PedidoCreate, PedidoOut
-from app.services import pedido_service
+from app.services import pedido_service, revocacion_service
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
@@ -35,6 +35,21 @@ def mis_pedidos(
     Retorna el historial de compras del usuario autenticado del más nuevo al más viejo.
     """
     return pedido_service.listar_mis_pedidos(db=db, usuario_id=usuario.id)
+
+@router.post("/{pedido_id}/revocacion", status_code=status.HTTP_201_CREATED)
+def revocar_pedido(
+    pedido_id: int,
+    usuario: models.Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Botón de Arrepentimiento / Revocación (Art. 34 Ley 24.240 y Disposición 954/2025):
+    - Valida que sea del usuario autenticado (404)
+    - Valida que no esté cancelado (409)
+    - Valida plazo de 10 días corridos (409)
+    - Devuelve stock y genera código legal ARR-YYYYMMDD-HEX (201)
+    """
+    return revocacion_service.revocar(db=db, usuario=usuario, pedido_id=pedido_id)
 
 @router.get("/{pedido_id}", response_model=PedidoOut)
 def ver_pedido(

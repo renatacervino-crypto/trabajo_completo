@@ -119,33 +119,34 @@ export async function getMisPedidos() {
   return res.json();
 }
 
-export async function solicitarArrepentimiento({ pedidoId, motivo = '' }) {
-  const res = await fetch(`${API_URL}/derechos/arrepentimiento`, {
+export async function revocarPedido(pedidoId) {
+  const res = await fetch(`${API_URL}/pedidos/${pedidoId}/revocacion`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
     },
-    body: JSON.stringify({
-      pedido_id: Number(pedidoId),
-      motivo: motivo || undefined,
-    }),
   });
 
   if (res.status === 401) {
-    throw new Error('Debes iniciar sesión para solicitar la revocación.');
+    throw new Error('Debes iniciar sesión para revocar el pedido.');
   }
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || 'No se pudo procesar la solicitud de arrepentimiento');
+    throw new Error(errorData.detail || 'No se pudo procesar la revocación.');
   }
 
   return res.json();
 }
 
-export async function getDatosPersonales() {
-  const res = await fetch(`${API_URL}/derechos/mis-datos`, {
+export async function solicitarArrepentimiento({ pedidoId, motivo = '' }) {
+  // Conexión directa al endpoint del contrato: POST /pedidos/{id}/revocacion
+  return revocarPedido(pedidoId);
+}
+
+export async function getMisDatos() {
+  const res = await fetch(`${API_URL}/usuarios/me/datos`, {
     headers: authHeaders(),
   });
 
@@ -160,16 +161,40 @@ export async function getDatosPersonales() {
   return res.json();
 }
 
-export async function solicitarBaja({ motivo = '' } = {}) {
-  const res = await fetch(`${API_URL}/derechos/baja`, {
-    method: 'POST',
+export async function exportarMisDatos() {
+  const res = await fetch(`${API_URL}/usuarios/me/exportar`, {
+    headers: authHeaders(),
+  });
+
+  if (res.status === 401) {
+    throw new Error('Debes iniciar sesión para exportar tus datos.');
+  }
+
+  if (!res.ok) {
+    throw new Error('No se pudo descargar el archivo de datos.');
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mis_datos.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+export async function getDatosPersonales() {
+  return getMisDatos();
+}
+
+export async function darDeBajaCuenta() {
+  const res = await fetch(`${API_URL}/usuarios/me`, {
+    method: 'DELETE',
     headers: {
-      'Content-Type': 'application/json',
       ...authHeaders(),
     },
-    body: JSON.stringify({
-      motivo: motivo || undefined,
-    }),
   });
 
   if (res.status === 401) {
@@ -182,6 +207,10 @@ export async function solicitarBaja({ motivo = '' } = {}) {
   }
 
   return res.json();
+}
+
+export async function solicitarBaja({ motivo = '' } = {}) {
+  return darDeBajaCuenta();
 }
 
 export async function crearProducto(productoData) {
@@ -250,8 +279,12 @@ export default {
   crearPedido,
   getMisPedidos,
   solicitarArrepentimiento,
+  revocarPedido,
   getDatosPersonales,
+  getMisDatos,
+  exportarMisDatos,
   solicitarBaja,
+  darDeBajaCuenta,
   crearProducto,
   subirImagenProducto,
   eliminarProducto,

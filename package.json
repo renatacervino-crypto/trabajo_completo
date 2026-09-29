@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "server": "python -m uvicorn app.main:app --reload --port 8000",
+    "frontend": "npm --prefix tienda-frontend run dev",
     "dev": "npm --prefix tienda-frontend run dev",
     "build": "npm --prefix tienda-frontend run build",
     "preview": "npm --prefix tienda-frontend run preview"
