@@ -1,10 +1,39 @@
+# ── Dependencias ──────────────────────────────────────────
 node_modules/
 dist/
 tienda-frontend/node_modules/
 tienda-frontend/dist/
-.DS_Store
-*.log
+
+# ── Base de datos (local, no se comparte) ─────────────────
+*.db
+*.sqlite
+
+# ── Imágenes subidas por usuarios ─────────────────────────
+uploads/
+
+# ── Variables de entorno (contienen credenciales) ─────────
+.env
+tienda-frontend/.env
+
+# ── Carpetas de capturas y archivos de prueba ──────────────
+capturas/
+capturas_entrega_clase9/
+archivos_de_prueba/
+
+# ── Scripts de testing y demo ─────────────────────────────
+test_*.py
+generar_capturas_demo.py
+
+# ── Python ────────────────────────────────────────────────
 __pycache__/
-# *.db (Permitido para que la base de datos funcione exactamente igual en cualquier computadora)
+*.pyc
+*.pyo
 venv/
 .venv/
+
+# ── Sistema operativo ──────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
