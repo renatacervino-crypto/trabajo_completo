@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export function authHeaders() {
   const token = localStorage.getItem('access_token');
@@ -270,6 +270,38 @@ export async function eliminarProducto(productoId) {
   return res.json();
 }
 
+export async function getAllPedidos() {
+  const res = await fetch(`${API_URL}/pedidos/todos`, {
+    headers: authHeaders(),
+  });
+
+  if (res.status === 401) throw new Error('Sesión no autorizada o expirada');
+  if (res.status === 403) throw new Error('No tenés permisos de administrador');
+  if (!res.ok) throw new Error('No se pudo obtener la lista de pedidos');
+
+  return res.json();
+}
+
+export async function actualizarEstadoPedido(pedidoId, estado) {
+  const res = await fetch(`${API_URL}/pedidos/${pedidoId}/estado`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ estado }),
+  });
+
+  if (res.status === 401) throw new Error('Sesión no autorizada o expirada');
+  if (res.status === 403) throw new Error('No tenés permisos de administrador');
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'No se pudo actualizar el estado del pedido');
+  }
+
+  return res.json();
+}
+
 export default {
   getProductos,
   registrar,
@@ -288,6 +320,8 @@ export default {
   crearProducto,
   subirImagenProducto,
   eliminarProducto,
+  getAllPedidos,
+  actualizarEstadoPedido,
 };
 
 

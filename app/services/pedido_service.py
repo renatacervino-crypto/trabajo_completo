@@ -44,7 +44,7 @@ def crear_pedido(db: Session, usuario: models.Usuario, datos: PedidoCreate) -> m
         # 5. Crear Pedido y persistir
         nuevo_pedido = models.Pedido(
             usuario_id=usuario.id,
-            estado="pendiente",
+            estado="completado",
             total=float(total_acumulado),
             items=items_db
         )

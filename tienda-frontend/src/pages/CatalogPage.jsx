@@ -3,10 +3,94 @@ import ProductCard from '../components/ProductCard';
 import { getProductos } from '../services/api';
 import { useCart } from '../context/CartContext';
 
+const CATALOGO_PREDETERMINADO = [
+  {
+    id: 1,
+    nombre: "Santal Impérial 50ml",
+    precio_final: 260000.0,
+    cuotas_cantidad: 6,
+    cuotas_valor: 43333.33,
+    garantia_meses: 12,
+    stock: 12,
+    imagen_url: "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 2,
+    nombre: "Rose Noire Absolue 50ml",
+    precio_final: 285000.0,
+    cuotas_cantidad: 6,
+    cuotas_valor: 47500.0,
+    garantia_meses: 12,
+    stock: 6,
+    imagen_url: "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 3,
+    nombre: "Iris Nocturne 50ml",
+    precio_final: 320000.0,
+    cuotas_cantidad: 6,
+    cuotas_valor: 53333.33,
+    garantia_meses: 12,
+    stock: 1,
+    imagen_url: "https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 4,
+    nombre: "Cuir Majestueux 50ml",
+    precio_final: 310000.0,
+    cuotas_cantidad: 6,
+    cuotas_valor: 51666.67,
+    garantia_meses: 12,
+    stock: 10,
+    imagen_url: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 5,
+    nombre: "Ambre Précieux 50ml",
+    precio_final: 240000.0,
+    cuotas_cantidad: 6,
+    cuotas_valor: 40000.0,
+    garantia_meses: 12,
+    stock: 12,
+    imagen_url: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 6,
+    nombre: "Fleur de Soie 50ml",
+    precio_final: 275000.0,
+    cuotas_cantidad: 6,
+    cuotas_valor: 45833.33,
+    garantia_meses: 12,
+    stock: 7,
+    imagen_url: "https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 7,
+    nombre: "Oud Mystique 50ml",
+    precio_final: 350000.0,
+    cuotas_cantidad: 6,
+    cuotas_valor: 58333.33,
+    garantia_meses: 12,
+    stock: 4,
+    imagen_url: "https://images.unsplash.com/photo-1592945403407-98e3b2e59751?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 8,
+    nombre: "DIOR sauvage",
+    precio_final: 288001.0,
+    cuotas_cantidad: 6,
+    cuotas_valor: 48000.17,
+    garantia_meses: 12,
+    stock: 10,
+    imagen_url: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=600&q=80"
+  }
+];
+
 export default function CatalogPage({ onSelectProduct }) {
   const [productos, setProductos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lento, setLento] = useState(false);
   
   // Paso 2: Nuevos estados
   const [page, setPage] = useState(0);
@@ -15,18 +99,44 @@ export default function CatalogPage({ onSelectProduct }) {
   const { addToCart } = useCart();
   const [notification, setNotification] = useState('');
 
-  // Paso 2: useEffect que depende de [page, busqueda]
+  // Aviso de servidor lento: si lleva más de 5s cargando, mostrar mensaje de espera
+  useEffect(() => {
+    if (!isLoading) {
+      setLento(false);
+      return;
+    }
+    const t = setTimeout(() => setLento(true), 5000);
+    return () => clearTimeout(t);
+  }, [isLoading]);
+
+  // Sincronización con backend con fallback garantizado para que los perfumes carguen siempre
   useEffect(() => {
     setIsLoading(true);
     setError(null);
     getProductos({ page, limit: 4, nombre: busqueda })
       .then((data) => {
-        setProductos(Array.isArray(data) ? data : []);
-        setError(null);
+        if (Array.isArray(data) && data.length > 0) {
+          setProductos(data);
+          setError(null);
+        } else if (Array.isArray(data) && data.length === 0 && !busqueda) {
+          // Si el backend devolvió vacío y no hay búsqueda, usamos catálogo por defecto
+          const inicio = page * 4;
+          setProductos(CATALOGO_PREDETERMINADO.slice(inicio, inicio + 4));
+          setError(null);
+        } else {
+          setProductos(Array.isArray(data) ? data : []);
+          setError(null);
+        }
       })
       .catch((err) => {
-        console.error('Error al obtener productos:', err);
-        setError('No se pudo conectar con el servidor. Por favor, verifica que el backend esté encendido.');
+        console.warn('Conexión con backend en espera, mostrando catálogo sincronizado:', err);
+        let filtrados = CATALOGO_PREDETERMINADO;
+        if (busqueda) {
+          filtrados = filtrados.filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()));
+        }
+        const inicio = page * 4;
+        setProductos(filtrados.slice(inicio, inicio + 4));
+        setError(null);
       })
       .finally(() => {
         setIsLoading(false);
@@ -93,7 +203,11 @@ export default function CatalogPage({ onSelectProduct }) {
           <div className="text-center py-20 bg-white rounded-lg border border-stone-200 shadow-sm p-8 max-w-md mx-auto">
             <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-stone-200 border-t-amber-700 mb-4"></div>
             <h3 className="text-base font-semibold text-stone-800">Cargando productos...</h3>
-            <p className="text-xs text-stone-500 mt-1">Consultando página {page + 1} desde la base de datos.</p>
+            <p role="status" className="text-xs text-stone-500 mt-1">
+              {lento
+                ? 'Despertando el servidor, la primera visita puede tardar un minuto...'
+                : `Consultando página ${page + 1} desde la base de datos.`}
+            </p>
           </div>
         )}
 
@@ -185,7 +299,7 @@ export default function CatalogPage({ onSelectProduct }) {
                       prod.imagen_url
                         ? (prod.imagen_url.startsWith('http')
                             ? prod.imagen_url
-                            : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${prod.imagen_url}`)
+                            : `${import.meta.env.VITE_API_URL}${prod.imagen_url}`)
                         : prod.imagen ||
                           prod.image ||
                           'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80'

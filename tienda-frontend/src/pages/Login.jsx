@@ -108,13 +108,6 @@ export default function Login() {
             </div>
           </form>
 
-          {/* Accesos rápidos de prueba para la corrección */}
-          <div className="mt-6 pt-4 border-t border-stone-100 text-[11px] text-stone-500 space-y-1">
-            <p className="font-semibold text-stone-700">Usuarios de demostración disponibles:</p>
-            <p>• <strong>Cliente:</strong> cliente@lelixir.com / cliente1234</p>
-            <p>• <strong>Admin:</strong> admin@lelixir.com / admin1234</p>
-          </div>
-
           <div className="mt-6 text-center text-xs text-stone-500">
             ¿No tenés cuenta aún?{' '}
             <Link to="/registro" className="text-amber-800 font-semibold hover:underline">

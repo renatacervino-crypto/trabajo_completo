@@ -44,7 +44,7 @@ class Pedido(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    estado = Column(String(50), default="pendiente", nullable=False)
+    estado = Column(String(50), default="completado", nullable=False)
     total = Column(Numeric(12, 2), default=0.0, nullable=False)
     creado_en = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 

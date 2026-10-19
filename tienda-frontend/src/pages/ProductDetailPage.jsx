@@ -82,7 +82,7 @@ export default function ProductDetailPage({ product, onBack, onGoToCart }) {
                 currentProduct.imagen_url
                   ? (currentProduct.imagen_url.startsWith('http')
                       ? currentProduct.imagen_url
-                      : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${currentProduct.imagen_url}`)
+                      : `${import.meta.env.VITE_API_URL}${currentProduct.imagen_url}`)
                   : currentProduct.imagen ||
                     'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=800&q=80'
               }

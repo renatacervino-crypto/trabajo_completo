@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { getProductos, subirImagenProducto, crearProducto, eliminarProducto } from '../services/api';
+import { getProductos, subirImagenProducto, crearProducto, eliminarProducto, getAllPedidos, actualizarEstadoPedido } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL;
 
 export default function PanelAdmin() {
   const { usuario } = useAuth();
@@ -31,6 +31,11 @@ export default function PanelAdmin() {
   const [archivoInfoNuevo, setArchivoInfoNuevo] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
 
+  // Estados de Pedidos (Admin)
+  const [pedidos, setPedidos] = useState([]);
+  const [isLoadingPedidos, setIsLoadingPedidos] = useState(false);
+  const [actualizandoPedido, setActualizandoPedido] = useState(null);
+
   // Notificaciones y Errores
   const [errorValidacion, setErrorValidacion] = useState(null);
   const [mensajeExito, setMensajeExito] = useState(null);
@@ -49,8 +54,17 @@ export default function PanelAdmin() {
       .finally(() => setIsLoadingProductos(false));
   };
 
+  const cargarPedidos = () => {
+    setIsLoadingPedidos(true);
+    getAllPedidos()
+      .then((data) => setPedidos(Array.isArray(data) ? data : []))
+      .catch((err) => console.error('Error al cargar pedidos:', err))
+      .finally(() => setIsLoadingPedidos(false));
+  };
+
   useEffect(() => {
     cargarProductos();
+    cargarPedidos();
   }, []);
 
   // Función reutilizable para validar archivo de imagen (< 2MB y tipo imagen)
@@ -258,6 +272,27 @@ export default function PanelAdmin() {
   const getFullImageUrl = (url) => {
     if (!url) return null;
     return url.startsWith('http') ? url : `${API_BASE}${url}`;
+  };
+
+  const handleCambiarEstado = async (pedidoId, nuevoEstado) => {
+    try {
+      setActualizandoPedido(pedidoId);
+      setErrorValidacion(null);
+      setMensajeExito(null);
+      await actualizarEstadoPedido(pedidoId, nuevoEstado);
+      setMensajeExito(`✓ Pedido #${pedidoId} actualizado a "${nuevoEstado}" correctamente.`);
+      cargarPedidos();
+    } catch (err) {
+      setErrorValidacion(err.message || 'No se pudo actualizar el estado del pedido.');
+    } finally {
+      setActualizandoPedido(null);
+    }
+  };
+
+  const estadoConfig = {
+    pendiente:   { label: 'Pendiente',   color: 'bg-amber-100 text-amber-800 border-amber-300' },
+    completado:  { label: 'Completado',  color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+    cancelado:   { label: 'Cancelado',   color: 'bg-red-100 text-red-700 border-red-300' },
   };
 
   return (
@@ -556,6 +591,98 @@ export default function PanelAdmin() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* SECCIÓN 4: GESTIÓN DE PEDIDOS */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-stone-200 shadow-sm">
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-stone-100">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-amber-900 text-amber-100 text-sm">📦</span>
+              <div>
+                <h2 className="text-lg font-serif text-stone-900">Gestión de Pedidos</h2>
+                <p className="text-xs text-stone-500 font-light">
+                  Cambiá el estado de cada pedido. Los cambios se guardan en la base de datos.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={cargarPedidos}
+              disabled={isLoadingPedidos}
+              className="text-xs text-amber-800 hover:underline cursor-pointer disabled:opacity-50"
+            >
+              {isLoadingPedidos ? 'Cargando...' : 'Actualizar'}
+            </button>
+          </div>
+
+          {isLoadingPedidos && (
+            <p className="text-xs text-stone-400 text-center py-6">Cargando pedidos...</p>
+          )}
+
+          {!isLoadingPedidos && pedidos.length === 0 && (
+            <p className="text-xs text-stone-400 text-center py-6">No hay pedidos registrados aún.</p>
+          )}
+
+          {!isLoadingPedidos && pedidos.length > 0 && (
+            <div className="overflow-x-auto mt-4">
+              <table className="w-full text-xs text-stone-700 border-collapse">
+                <thead>
+                  <tr className="bg-stone-50 border-b border-stone-200">
+                    <th className="text-left px-3 py-2 font-semibold uppercase tracking-wider text-stone-500">ID</th>
+                    <th className="text-left px-3 py-2 font-semibold uppercase tracking-wider text-stone-500">Usuario</th>
+                    <th className="text-left px-3 py-2 font-semibold uppercase tracking-wider text-stone-500">Total</th>
+                    <th className="text-left px-3 py-2 font-semibold uppercase tracking-wider text-stone-500">Items</th>
+                    <th className="text-left px-3 py-2 font-semibold uppercase tracking-wider text-stone-500">Estado Actual</th>
+                    <th className="text-left px-3 py-2 font-semibold uppercase tracking-wider text-stone-500">Cambiar Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pedidos.map((pedido) => {
+                    const cfg = estadoConfig[pedido.estado] || estadoConfig['pendiente'];
+                    const isUpdating = actualizandoPedido === pedido.id;
+                    return (
+                      <tr key={pedido.id} className="border-b border-stone-100 hover:bg-stone-50 transition-colors">
+                        <td className="px-3 py-3 font-mono font-bold text-stone-500">#{pedido.id}</td>
+                        <td className="px-3 py-3 text-stone-700">Usuario #{pedido.usuario_id}</td>
+                        <td className="px-3 py-3 font-mono font-bold text-amber-900">
+                          ${Number(pedido.total).toLocaleString('es-AR')}
+                        </td>
+                        <td className="px-3 py-3 text-stone-500">{pedido.items?.length ?? 0} ítem(s)</td>
+                        <td className="px-3 py-3">
+                          <span className={`inline-block px-2.5 py-1 rounded-full border text-[11px] font-semibold ${cfg.color}`}>
+                            {cfg.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3">
+                          <div className="flex gap-1.5 flex-wrap">
+                            {['pendiente', 'completado', 'cancelado'].map((estado) => (
+                              <button
+                                key={estado}
+                                disabled={isUpdating || pedido.estado === estado}
+                                onClick={() => handleCambiarEstado(pedido.id, estado)}
+                                className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer
+                                  disabled:opacity-40 disabled:cursor-not-allowed
+                                  ${
+                                    pedido.estado === estado
+                                      ? estadoConfig[estado].color + ' opacity-50'
+                                      : estado === 'completado'
+                                        ? 'bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50'
+                                        : estado === 'cancelado'
+                                          ? 'bg-white border-red-300 text-red-600 hover:bg-red-50'
+                                          : 'bg-white border-amber-300 text-amber-700 hover:bg-amber-50'
+                                  }`}
+                              >
+                                {isUpdating ? '...' : estadoConfig[estado].label}
+                              </button>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
