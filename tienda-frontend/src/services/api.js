@@ -302,6 +302,26 @@ export async function actualizarEstadoPedido(pedidoId, estado) {
   return res.json();
 }
 
+export async function actualizarStockProducto(productoId, stock) {
+  const res = await fetch(`${API_URL}/productos/${productoId}/stock`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ stock }),
+  });
+
+  if (res.status === 401) throw new Error('Sesión no autorizada o expirada');
+  if (res.status === 403) throw new Error('No tenés permisos de administrador');
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'No se pudo actualizar el stock');
+  }
+
+  return res.json();
+}
+
 export default {
   getProductos,
   registrar,
@@ -322,6 +342,7 @@ export default {
   eliminarProducto,
   getAllPedidos,
   actualizarEstadoPedido,
+  actualizarStockProducto,
 };
 
 

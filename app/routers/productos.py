@@ -3,6 +3,7 @@ import os
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from app.db.database import get_db
 from app import schemas, models
@@ -10,6 +11,9 @@ from app.services import productos as productos_service
 from app.routers.auth import require_admin
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
+
+class ActualizarStockBody(BaseModel):
+    stock: int
 
 # Configuración de subida de imágenes (Clase 10)
 UPLOADS_DIR = "uploads"
@@ -116,6 +120,30 @@ async def subir_imagen_producto(
     db.commit()
     db.refresh(producto)
 
+    return producto
+
+@router.patch("/{producto_id}/stock", response_model=schemas.ProductoOut)
+def actualizar_stock_producto(
+    producto_id: int,
+    body: ActualizarStockBody,
+    admin: models.Usuario = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    [Solo Admin] Actualiza el stock de un producto.
+    El valor debe ser >= 0. El cambio se persiste en la base de datos.
+    """
+    if body.stock < 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="El stock no puede ser negativo."
+        )
+    producto = productos_service.obtener_producto(db=db, producto_id=producto_id)
+    if not producto:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Producto no encontrado")
+    producto.stock = body.stock
+    db.commit()
+    db.refresh(producto)
     return producto
 
 @router.delete("/{producto_id}", status_code=status.HTTP_200_OK)

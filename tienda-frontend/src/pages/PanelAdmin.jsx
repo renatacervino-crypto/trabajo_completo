@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { getProductos, subirImagenProducto, crearProducto, eliminarProducto, getAllPedidos, actualizarEstadoPedido } from '../services/api';
+import { getProductos, subirImagenProducto, crearProducto, eliminarProducto, getAllPedidos, actualizarEstadoPedido, actualizarStockProducto } from '../services/api';
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -35,6 +35,10 @@ export default function PanelAdmin() {
   const [pedidos, setPedidos] = useState([]);
   const [isLoadingPedidos, setIsLoadingPedidos] = useState(false);
   const [actualizandoPedido, setActualizandoPedido] = useState(null);
+
+  // Estados de edición de stock
+  const [stockEditando, setStockEditando] = useState({}); // { [productoId]: valorTemp }
+  const [actualizandoStock, setActualizandoStock] = useState(null);
 
   // Notificaciones y Errores
   const [errorValidacion, setErrorValidacion] = useState(null);
@@ -289,6 +293,24 @@ export default function PanelAdmin() {
     }
   };
 
+  const handleGuardarStock = async (productoId) => {
+    const nuevoStock = stockEditando[productoId];
+    if (nuevoStock === undefined || nuevoStock === '') return;
+    try {
+      setActualizandoStock(productoId);
+      setErrorValidacion(null);
+      setMensajeExito(null);
+      await actualizarStockProducto(productoId, Number(nuevoStock));
+      setMensajeExito(`✓ Stock del producto #${productoId} actualizado a ${nuevoStock} unidades.`);
+      setStockEditando((prev) => { const s = { ...prev }; delete s[productoId]; return s; });
+      cargarProductos();
+    } catch (err) {
+      setErrorValidacion(err.message || 'No se pudo actualizar el stock.');
+    } finally {
+      setActualizandoStock(null);
+    }
+  };
+
   const estadoConfig = {
     pendiente:   { label: 'Pendiente',   color: 'bg-amber-100 text-amber-800 border-amber-300' },
     completado:  { label: 'Completado',  color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
@@ -308,9 +330,7 @@ export default function PanelAdmin() {
               <h1 className="text-2xl sm:text-3xl font-serif mt-1">
                 Panel de Administración & Catálogo
               </h1>
-              <p className="text-xs text-stone-300 mt-1 font-light">
-                Agregá nuevos perfumes, gestioná inventario y subí imágenes reales con FormData (Clase 10).
-              </p>
+
             </div>
             <Link
               to="/"
@@ -576,7 +596,28 @@ export default function PanelAdmin() {
                   <span className="text-[10px] uppercase font-mono text-stone-400">ID #{prod.id}</span>
                   <h4 className="text-xs font-serif font-medium text-stone-900 line-clamp-1">{prod.nombre}</h4>
                   <p className="text-xs font-mono font-bold text-amber-900 mt-0.5">${prod.precio_final?.toLocaleString('es-AR')}</p>
-                  <p className="text-[10px] text-stone-500 mt-1">Stock: {prod.stock ?? 0} u. · {prod.cuotas_cantidad} cuotas</p>
+
+                  {/* Edición de stock inline */}
+                  <div className="mt-2">
+                    <label className="text-[10px] uppercase tracking-wider text-stone-500 font-semibold">Stock (u.)</label>
+                    <div className="flex gap-1 mt-0.5">
+                      <input
+                        type="number"
+                        min="0"
+                        value={stockEditando[prod.id] !== undefined ? stockEditando[prod.id] : prod.stock ?? 0}
+                        onChange={(e) => setStockEditando((prev) => ({ ...prev, [prod.id]: e.target.value }))}
+                        className="w-full px-2 py-1 text-xs border border-stone-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-amber-600 font-mono"
+                      />
+                      <button
+                        type="button"
+                        disabled={actualizandoStock === prod.id || stockEditando[prod.id] === undefined}
+                        onClick={() => handleGuardarStock(prod.id)}
+                        className="px-2 py-1 bg-stone-900 hover:bg-amber-900 disabled:bg-stone-300 text-white rounded-lg text-[11px] font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed shrink-0"
+                      >
+                        {actualizandoStock === prod.id ? '…' : '✓'}
+                      </button>
+                    </div>
+                  </div>
 
                   <button
                     type="button"
