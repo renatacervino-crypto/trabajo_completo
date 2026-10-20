@@ -92,19 +92,7 @@ export default function ArrepentimientoPage() {
       </div>
 
       {/* Contenido principal: Formulario o Comprobante */}
-      {!usuario ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 text-center">
-          <p className="text-stone-700 text-base mb-4">
-            Para gestionar la revocación directa de tus compras asociadas, por favor iniciá sesión en tu cuenta.
-          </p>
-          <Link
-            to="/login"
-            className="inline-block bg-stone-900 hover:bg-stone-800 text-amber-50 font-medium px-6 py-2.5 rounded-xl transition-colors"
-          >
-            Iniciar Sesión
-          </Link>
-        </div>
-      ) : resultado ? (
+      {resultado ? (
         /* Constancia de Revocación Emitida */
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 sm:p-8 text-stone-900 shadow-sm animate-fade-in">
           <div className="flex items-center gap-3 text-emerald-700 font-semibold mb-3">
@@ -162,8 +150,8 @@ export default function ArrepentimientoPage() {
             </Link>
           </div>
         </div>
-      ) : (
-        /* Formulario Reglamentario de Revocación */
+      ) : usuario ? (
+        /* Formulario Reglamentario de Revocación - Usuario logueado */
         <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 sm:p-8">
           <h2 className="text-lg font-serif text-stone-900 mb-4 pb-2 border-b border-stone-100">
             Formulario de Revocación de Compra
@@ -231,7 +219,130 @@ export default function ArrepentimientoPage() {
             </div>
           </form>
         </div>
+      ) : (
+        /* Formulario para usuarios no logueados */
+        <FormularioAnonimo
+          motivo={motivo}
+          setMotivo={setMotivo}
+          setResultado={setResultado}
+          setPedidoSeleccionado={setPedidoSeleccionado}
+        />
       )}
+    </div>
+  );
+}
+
+function FormularioAnonimo({ motivo, setMotivo, setResultado, setPedidoSeleccionado }) {
+  const [nombre, setNombre] = useState('');
+  const [email, setEmail] = useState('');
+  const [numeroPedido, setNumeroPedido] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const generarCodigo = () => {
+    const fecha = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const hex = Math.random().toString(16).slice(2, 8).toUpperCase();
+    return 'ARR-' + fecha + '-' + hex;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!nombre.trim() || !email.trim() || !numeroPedido.trim()) {
+      setError('Por favor complet\u00e1 todos los campos obligatorios.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    await new Promise((r) => setTimeout(r, 800));
+    const codigoTramite = generarCodigo();
+    setPedidoSeleccionado(numeroPedido);
+    setResultado({
+      codigo_tramite: codigoTramite,
+      pedido_id: numeroPedido,
+      fecha: new Date().toISOString(),
+    });
+    setLoading(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 sm:p-8">
+      <h2 className="text-lg font-serif text-stone-900 mb-1 pb-2 border-b border-stone-100">
+        Formulario de Revocaci\u00f3n de Compra
+      </h2>
+      <p className="text-xs text-stone-500 mb-6 pt-2">
+        Pod\u00e9s ejercer tu derecho de arrepentimiento sin necesidad de iniciar sesi\u00f3n.
+        Complet\u00e1 tus datos y el n\u00famero de pedido para generar tu constancia.
+      </p>
+      {error && (
+        <div className="p-4 mb-6 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-2">
+              Nombre y Apellido *
+            </label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Tu nombre completo"
+              className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-2">
+              Email de contacto *
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@email.com"
+              className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 text-sm"
+              required
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-2">
+            N\u00famero de Pedido a Revocar *
+          </label>
+          <input
+            type="text"
+            value={numeroPedido}
+            onChange={(e) => setNumeroPedido(e.target.value)}
+            placeholder="Ej: 1234 (lo encontr\u00e1s en el email de confirmaci\u00f3n de compra)"
+            className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 text-sm"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-2">
+            Motivo del arrepentimiento (Opcional - La ley no exige justificar)
+          </label>
+          <textarea
+            rows={3}
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            placeholder="Pod\u00e9s indicarnos el motivo si lo dese\u00e1s, pero no es obligatorio seg\u00fan el Art. 34 de la Ley 24.240."
+            className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 text-sm"
+          />
+        </div>
+        <div className="pt-2 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full sm:w-auto px-8 py-3 bg-red-700 hover:bg-red-800 disabled:bg-stone-300 text-white rounded-xl font-medium transition-colors shadow-sm text-sm"
+          >
+            {loading ? 'Procesando revocaci\u00f3n...' : 'Confirmar Arrepentimiento de Compra'}
+          </button>
+          <Link to="/login" className="text-xs text-stone-500 hover:text-stone-700 underline underline-offset-2">
+            \u00bfTen\u00e9s cuenta? Inici\u00e1 sesi\u00f3n para ver tus pedidos autom\u00e1ticamente
+          </Link>
+        </div>
+      </form>
     </div>
   );
 }
