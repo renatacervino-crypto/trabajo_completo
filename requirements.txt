@@ -12,3 +12,4 @@ pyjwt>=2.8.0
 requests>=2.32.0
 httpx>=0.27.0
 pytest>=8.0.0
+psycopg2-binary>=2.9.9

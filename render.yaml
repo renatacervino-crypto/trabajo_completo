@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: lelixir-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lelixir-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://lelixir.vercel.app
+      - key: PROJECT_NAME
+        value: "L'Élixir - API de Productos"
+
+databases:
+  - name: lelixir-db
+    databaseName: ecommerce_db
+    user: lelixir_user
+    plan: free
