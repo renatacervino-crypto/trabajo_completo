@@ -36,7 +36,7 @@ class Producto(Base):
     imagen_url = Column(String(500), nullable=True)
 
     # Relación 1 a N: Un producto puede aparecer en múltiples ítems de pedido
-    items = relationship("ItemPedido", back_populates="producto")
+    items = relationship("ItemPedido", back_populates="producto", cascade="all, delete-orphan")
 
 
 class Pedido(Base):
