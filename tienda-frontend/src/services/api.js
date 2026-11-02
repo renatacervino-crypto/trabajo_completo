@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'https://trabajo-complete-9zhd.onrender.com';
+
 
 export function authHeaders() {
   const token = localStorage.getItem('access_token');
