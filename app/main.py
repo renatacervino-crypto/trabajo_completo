@@ -109,3 +109,14 @@ app.include_router(usuarios_router.router)
 @app.get("/", tags=["Health"])
 def root():
     return {"message": "API de L'Élixir funcionando correctamente", "docs": "/docs"}
+
+@app.get("/salud", tags=["Health"])
+def salud(db: SessionLocal = None):
+    from app.database import SessionLocal as SL
+    try:
+        session = SL()
+        session.execute(__import__("sqlalchemy").text("SELECT 1"))
+        session.close()
+        return {"estado": "ok", "base": "ok"}
+    except Exception as e:
+        return {"estado": "ok", "base": "error", "detalle": str(e)}
