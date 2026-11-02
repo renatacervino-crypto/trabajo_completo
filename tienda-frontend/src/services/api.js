@@ -1,5 +1,19 @@
 const API_URL = import.meta.env.VITE_API_URL || 'https://trabajo-complete-9zhd.onrender.com';
 
+// Reintenta automáticamente cuando Render está despertando (free tier duerme tras 15 min)
+async function fetchConReintento(url, opciones = {}, intentos = 3, delay = 4000) {
+  for (let i = 0; i < intentos; i++) {
+    try {
+      const res = await fetch(url, opciones);
+      return res;
+    } catch (err) {
+      if (i === intentos - 1) throw err;
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
+
 
 export function authHeaders() {
   const token = localStorage.getItem('access_token');
@@ -26,7 +40,7 @@ export async function login(email, password) {
     password,
   });
 
-  const res = await fetch(`${API_URL}/auth/login`, {
+  const res = await fetchConReintento(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -41,7 +55,7 @@ export async function login(email, password) {
 }
 
 export async function getMe() {
-  const res = await fetch(`${API_URL}/auth/me`, {
+  const res = await fetchConReintento(`${API_URL}/auth/me`, {
     headers: authHeaders(),
   });
 
@@ -64,7 +78,7 @@ export async function getProductos({ page = 0, limit = 4, nombre = '' } = {}) {
   const query = params.toString();
   const url = query ? `${API_URL}/productos?${query}` : `${API_URL}/productos`;
 
-  const respuesta = await fetch(url);
+  const respuesta = await fetchConReintento(url);
   if (!respuesta.ok) {
     throw new Error('Error al consultar el backend');
   }
