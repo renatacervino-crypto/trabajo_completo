@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { getProductos, subirImagenProducto, crearProducto, eliminarProducto, getAllPedidos, actualizarEstadoPedido, actualizarStockProducto } from '../services/api';
+import { getProductos, subirImagenProducto, crearProducto, eliminarProducto, getAllPedidos, actualizarEstadoPedido, actualizarStockProducto, API_URL } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE = API_URL;
 
 export default function PanelAdmin() {
   const { usuario } = useAuth();
@@ -397,8 +397,8 @@ export default function PanelAdmin() {
                 <input
                   type="number"
                   required
-                  min="1"
-                  step="1000"
+                  min="10"
+                  step="10"
                   value={nuevoPrecio}
                   onChange={(e) => setNuevoPrecio(e.target.value)}
                   placeholder="Ej: 350000 o superior (sin límite)"

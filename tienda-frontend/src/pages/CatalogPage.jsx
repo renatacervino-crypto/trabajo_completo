@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
-import { getProductos } from '../services/api';
+import { getProductos, API_URL } from '../services/api';
 import { useCart } from '../context/CartContext';
 
 const CATALOGO_PREDETERMINADO = [
@@ -299,7 +299,7 @@ export default function CatalogPage({ onSelectProduct }) {
                       prod.imagen_url
                         ? (prod.imagen_url.startsWith('http')
                             ? prod.imagen_url
-                            : `${import.meta.env.VITE_API_URL}${prod.imagen_url}`)
+                            : `${API_URL}${prod.imagen_url}`)
                         : prod.imagen ||
                           prod.image ||
                           'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80'
