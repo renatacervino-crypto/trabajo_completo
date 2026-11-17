@@ -1,4 +1,8 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'https://trabajo-completo-9rhd.onrender.com';
+export const API_URL = import.meta.env.DEV
+  ? (import.meta.env.VITE_API_URL || 'http://localhost:8000')
+  : (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('trabajo-complete-9zhd')
+      ? import.meta.env.VITE_API_URL
+      : 'https://trabajo-completo-9rhd.onrender.com');
 
 // Reintenta automáticamente cuando Render está despertando (free tier duerme tras 15 min de inactividad)
 async function fetchConReintento(url, opciones = {}, intentos = 12, delay = 4000) {
