@@ -312,9 +312,9 @@ export default function PanelAdmin() {
   };
 
   const estadoConfig = {
-    pendiente:   { label: 'Pendiente',   color: 'bg-amber-100 text-amber-800 border-amber-300' },
-    completado:  { label: 'Completado',  color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
-    cancelado:   { label: 'Cancelado',   color: 'bg-red-100 text-red-700 border-red-300' },
+    pendiente: { label: 'Pendiente', color: 'bg-amber-100 text-amber-800 border-amber-300' },
+    completado: { label: 'Completado', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+    cancelado: { label: 'Cancelado', color: 'bg-red-100 text-red-700 border-red-300' },
   };
 
   return (
@@ -702,14 +702,13 @@ export default function PanelAdmin() {
                                 onClick={() => handleCambiarEstado(pedido.id, estado)}
                                 className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer
                                   disabled:opacity-40 disabled:cursor-not-allowed
-                                  ${
-                                    pedido.estado === estado
-                                      ? estadoConfig[estado].color + ' opacity-50'
-                                      : estado === 'completado'
-                                        ? 'bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50'
-                                        : estado === 'cancelado'
-                                          ? 'bg-white border-red-300 text-red-600 hover:bg-red-50'
-                                          : 'bg-white border-amber-300 text-amber-700 hover:bg-amber-50'
+                                  ${pedido.estado === estado
+                                    ? estadoConfig[estado].color + ' opacity-50'
+                                    : estado === 'completado'
+                                      ? 'bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50'
+                                      : estado === 'cancelado'
+                                        ? 'bg-white border-red-300 text-red-600 hover:bg-red-50'
+                                        : 'bg-white border-amber-300 text-amber-700 hover:bg-amber-50'
                                   }`}
                               >
                                 {isUpdating ? '...' : estadoConfig[estado].label}

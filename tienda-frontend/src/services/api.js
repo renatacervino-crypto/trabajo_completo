@@ -1,7 +1,7 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'https://trabajo-completo-9rhd.onrender.com';
 
-// Reintenta automáticamente cuando Render está despertando (free tier duerme tras 15 min)
-async function fetchConReintento(url, opciones = {}, intentos = 3, delay = 4000) {
+// Reintenta automáticamente cuando Render está despertando (free tier duerme tras 15 min de inactividad)
+async function fetchConReintento(url, opciones = {}, intentos = 12, delay = 4000) {
   for (let i = 0; i < intentos; i++) {
     try {
       const res = await fetch(url, opciones);
@@ -13,15 +13,13 @@ async function fetchConReintento(url, opciones = {}, intentos = 3, delay = 4000)
   }
 }
 
-
-
 export function authHeaders() {
   const token = localStorage.getItem('access_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export async function registrar(datos) {
-  const res = await fetch(`${API_URL}/auth/register`, {
+  const res = await fetchConReintento(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(datos),
@@ -97,7 +95,7 @@ export async function crearPedido(items) {
     })),
   };
 
-  const res = await fetch(`${API_URL}/pedidos`, {
+  const res = await fetchConReintento(`${API_URL}/pedidos`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -119,7 +117,7 @@ export async function crearPedido(items) {
 }
 
 export async function getMisPedidos() {
-  const res = await fetch(`${API_URL}/pedidos/mios`, {
+  const res = await fetchConReintento(`${API_URL}/pedidos/mios`, {
     headers: authHeaders(),
   });
 
@@ -135,7 +133,7 @@ export async function getMisPedidos() {
 }
 
 export async function revocarPedido(pedidoId) {
-  const res = await fetch(`${API_URL}/pedidos/${pedidoId}/revocacion`, {
+  const res = await fetchConReintento(`${API_URL}/pedidos/${pedidoId}/revocacion`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -161,7 +159,7 @@ export async function solicitarArrepentimiento({ pedidoId, motivo = '' }) {
 }
 
 export async function getMisDatos() {
-  const res = await fetch(`${API_URL}/usuarios/me/datos`, {
+  const res = await fetchConReintento(`${API_URL}/usuarios/me/datos`, {
     headers: authHeaders(),
   });
 
@@ -177,7 +175,7 @@ export async function getMisDatos() {
 }
 
 export async function exportarMisDatos() {
-  const res = await fetch(`${API_URL}/usuarios/me/exportar`, {
+  const res = await fetchConReintento(`${API_URL}/usuarios/me/exportar`, {
     headers: authHeaders(),
   });
 
@@ -205,7 +203,7 @@ export async function getDatosPersonales() {
 }
 
 export async function darDeBajaCuenta() {
-  const res = await fetch(`${API_URL}/usuarios/me`, {
+  const res = await fetchConReintento(`${API_URL}/usuarios/me`, {
     method: 'DELETE',
     headers: {
       ...authHeaders(),
@@ -229,7 +227,7 @@ export async function solicitarBaja({ motivo = '' } = {}) {
 }
 
 export async function crearProducto(productoData) {
-  const res = await fetch(`${API_URL}/productos`, {
+  const res = await fetchConReintento(`${API_URL}/productos`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -255,7 +253,7 @@ export async function subirImagenProducto(productoId, archivo) {
   // El navegador lo arma solo con el boundary.
   const headers = authHeaders(); // Incluye solo Authorization: Bearer <token>
 
-  const res = await fetch(`${API_URL}/productos/${productoId}/imagen`, {
+  const res = await fetchConReintento(`${API_URL}/productos/${productoId}/imagen`, {
     method: 'POST',
     headers, // SIN 'Content-Type'
     body: formData,
@@ -270,7 +268,7 @@ export async function subirImagenProducto(productoId, archivo) {
 }
 
 export async function eliminarProducto(productoId) {
-  const res = await fetch(`${API_URL}/productos/${productoId}`, {
+  const res = await fetchConReintento(`${API_URL}/productos/${productoId}`, {
     method: 'DELETE',
     headers: {
       ...authHeaders(),
@@ -286,7 +284,7 @@ export async function eliminarProducto(productoId) {
 }
 
 export async function getAllPedidos() {
-  const res = await fetch(`${API_URL}/pedidos/todos`, {
+  const res = await fetchConReintento(`${API_URL}/pedidos/todos`, {
     headers: authHeaders(),
   });
 
@@ -298,7 +296,7 @@ export async function getAllPedidos() {
 }
 
 export async function actualizarEstadoPedido(pedidoId, estado) {
-  const res = await fetch(`${API_URL}/pedidos/${pedidoId}/estado`, {
+  const res = await fetchConReintento(`${API_URL}/pedidos/${pedidoId}/estado`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -318,7 +316,7 @@ export async function actualizarEstadoPedido(pedidoId, estado) {
 }
 
 export async function actualizarStockProducto(productoId, stock) {
-  const res = await fetch(`${API_URL}/productos/${productoId}/stock`, {
+  const res = await fetchConReintento(`${API_URL}/productos/${productoId}/stock`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',

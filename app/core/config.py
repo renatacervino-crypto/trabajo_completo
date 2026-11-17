@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "L'Élixir - API de Productos"
     DATABASE_URL: str = "sqlite:///./ecommerce.db"
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    SECRET_KEY: str = "lelixir-haute-parfumerie-paris-auth-jwt-secret-key-2026"
 
     model_config = SettingsConfigDict(
         env_file=".env",
